@@ -45,17 +45,19 @@ def connect_gsheet():
 
 # 2. Hàm đọc dữ liệu
 def load_data():
-    sheet = connect_gsheet()
-    if sheet:
-        try:
-            data = sheet.get_all_records()
+    try:
+        sheet_active = connect_gsheet() # Gọi hàm kết nối
+        if sheet_active is not None:    # Chỉ chạy tiếp nếu kết nối thành công
+            data = sheet_active.get_all_records()
             df = pd.DataFrame(data)
             if not df.empty:
                 df['Ngày giao'] = pd.to_datetime(df['Ngày giao'], dayfirst=True, errors='coerce')
                 df['Phí (VNĐ)'] = pd.to_numeric(df['Phí (VNĐ)'], errors='coerce').fillna(0)
                 return df.dropna(subset=['Ngày giao'])
-        except Exception as e:
-            st.warning(f"Sheets trống hoặc sai cấu trúc: {e}")
+    except Exception as e:
+        st.error(f"Lỗi khi xử lý dữ liệu: {e}")
+    
+    # Nếu có lỗi hoặc không có dữ liệu, trả về bảng trống thay vì báo lỗi code
     return pd.DataFrame(columns=["Ngày giao", "Nội dung đơn hàng", "Đơn vị vận chuyển", "Phí (VNĐ)"])
 
 # 3. Khởi tạo dữ liệu (Session State)
