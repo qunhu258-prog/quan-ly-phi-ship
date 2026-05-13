@@ -76,7 +76,7 @@ with st.sidebar:
 
 # --- PHẦN 2: CẬP NHẬT DỮ LIỆU (Nút thay cho F5) ---
 # Đặt nút cập nhật ngay dưới tiêu đề chính
-if st.button("🔄 Cập nhật/Làm mới dữ liệu"):
+if st.button("🔄 Làm tươi"):
     st.session_state.df = load_data()
     st.success("Dữ liệu đã được cập nhật mới nhất! ✅")
 
@@ -194,7 +194,7 @@ if not st.session_state.df.empty:
 
         excel_data = output.getvalue()
         st.download_button(
-            label="📥 Tải file Excel (Đã fix Tổng cộng)",
+            label="📥 Tải file Excel",
             data=excel_data,
             file_name=f"Chi_phi_ship_{sel_month.replace('/', '_')}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
