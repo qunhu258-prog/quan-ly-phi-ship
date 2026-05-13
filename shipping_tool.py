@@ -5,13 +5,12 @@ import gspread
 
 st.set_page_config(page_title="Quản lý Phí Giao Hàng", layout="wide")
 
-def lay_ket_noi():
+def connect_to_sheet():
     try:
-        # Lấy thông tin từ Secrets
         c = st.secrets["connections"]["gsheets"]
         p_key = c["private_key"].replace("\\n", "\n")
         
-        credentials = {
+        creds = {
             "type": c["type"], "project_id": c["project_id"],
             "private_key_id": c["private_key_id"], "private_key": p_key,
             "client_email": c["client_email"], "client_id": c["client_id"],
@@ -20,57 +19,50 @@ def lay_ket_noi():
             "client_x509_cert_url": c["client_x509_cert_url"]
         }
         
-        gc = gspread.service_account_from_dict(credentials)
-        # Mở file bằng URL
-        sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1pX1uImwD770upHdJ4OKNzYxwKxd5qVeI2zQeW0SBLUg/edit")
-        # Tự động lấy trang đầu tiên (không cần quan tâm tên là gì)
+        gc = gspread.service_account_from_dict(creds)
+        
+        # PHƯƠNG ÁN 1: Mở bằng ID (Lấy từ URL của Như: 1pX1uImwD770upHdJ4OKNzYxwKxd5qVeI2zQeW0SBLUg)
+        sheet_id = "1pX1uImwD770upHdJ4OKNzYxwKxd5qVeI2zQeW0SBLUg"
+        sh = gc.open_by_key(sheet_id)
+        
         return sh.get_worksheet(0), None
     except Exception as e:
         return None, str(e)
 
-# --- GIAO DIỆN CHÍNH ---
+# --- GIAO DIỆN ---
 st.title("🚚 Quản Lý Chi Phí Giao Hàng")
 
 if 'ds_donvi' not in st.session_state:
     st.session_state.ds_donvi = ["Ahamove 🛵", "Grab 🚗", "Lalamove 🚛", "GHTK 📦"]
 
-with st.sidebar:
-    st.header("⚙️ Cài đặt")
-    moi = st.text_input("Thêm đơn vị mới")
-    if st.button("Thêm"):
-        if moi and moi not in st.session_state.ds_donvi:
-            st.session_state.ds_donvi.append(moi)
-            st.rerun()
-
-with st.form("nhap_lieu", clear_on_submit=True):
+with st.form("form_nhap", clear_on_submit=True):
     col1, col2, col3 = st.columns([1, 2, 1])
-    n = col1.date_input("Ngày", datetime.now())
+    ngay = col1.date_input("Ngày", datetime.now())
     nd = col2.text_input("Nội dung")
     dv = col3.selectbox("Đơn vị", st.session_state.ds_donvi)
-    t = col3.number_input("Phí (VNĐ)", min_value=0, step=1000)
+    tien = col3.number_input("Phí (VNĐ)", min_value=0, step=1000)
     
     if st.form_submit_button("💾 Lưu thông tin"):
-        ws, err = lay_ket_noi()
-        if ws:
-            ws.append_row([n.strftime('%d/%m/%Y'), nd, dv, t])
-            st.success("Lưu thành công rồi Như ơi! ✅")
+        wks, err = connect_to_sheet()
+        if wks:
+            wks.append_row([ngay.strftime('%d/%m/%Y'), nd, dv, tien])
+            st.success("Lưu thành công rồi Như ơi! Đi nghỉ thôi nào! ✅")
             st.balloons()
             st.rerun()
         else:
-            st.error(f"Lỗi kết nối: {err}")
+            st.error(f"Lỗi kết nối chi tiết: {err}")
 
 st.write("---")
-# Hiển thị bảng
-ws, err = lay_ket_noi()
-if ws:
+# Hiển thị bảng dữ liệu
+wks, err = connect_to_sheet()
+if wks:
     try:
-        data = ws.get_all_records()
+        data = wks.get_all_records()
         if data:
-            df = pd.DataFrame(data)
-            st.dataframe(df.iloc[::-1], use_container_width=True, hide_index=True)
+            st.dataframe(pd.DataFrame(data).iloc[::-1], use_container_width=True, hide_index=True)
         else:
-            st.info("Bảng đang trống, Như hãy nhập đơn đầu tiên nhé!")
-    except:
-        st.warning("Gợi ý: Dòng đầu tiên trong Sheets phải là: Ngày, Nội dung, Đơn vị, Phí")
+            st.info("Bảng đang trống. Như nhớ điền tiêu đề 'Ngày, Nội dung, Đơn vị, Phí' vào hàng 1 của Sheets nhé!")
+    except Exception as e:
+        st.warning(f"Đã kết nối nhưng chưa đọc được dữ liệu: {e}")
 else:
-    st.error(f"Kết nối thất bại: {err}")
+    st.error(f"Kết nối thất bại hoàn toàn: {err}")
