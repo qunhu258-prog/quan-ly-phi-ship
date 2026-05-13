@@ -174,7 +174,7 @@ if not st.session_state.df.empty:
 
         excel_data = output.getvalue()
         st.download_button(
-            label="📥 Tải file Excel (Đã fix Tổng cộng)",
+            label="📥 Tải file Excel",
             data=excel_data,
             file_name=f"Chi_phi_ship_{sel_month.replace('/', '_')}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
