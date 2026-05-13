@@ -8,37 +8,28 @@ st.set_page_config(page_title="Quản lý Phí Giao Hàng", layout="wide")
 
 def connect_gsheet():
     try:
-        # Lấy thông tin từ Secrets
         s = st.secrets["connections"]["gsheets"]
-        
-        # Sửa lỗi định dạng private_key
-        p_key = s["private_key"]
-        if "\\n" in p_key:
-            p_key = p_key.replace("\\n", "\n")
+        p_key = s["private_key"].replace("\\n", "\n")
         
         credentials = {
-            "type": s["type"],
-            "project_id": s["project_id"],
-            "private_key_id": s["private_key_id"],
-            "private_key": p_key,
-            "client_email": s["client_email"],
-            "client_id": s["client_id"],
-            "auth_uri": s["auth_uri"],
-            "token_uri": s["token_uri"],
+            "type": s["type"], "project_id": s["project_id"],
+            "private_key_id": s["private_key_id"], "private_key": p_key,
+            "client_email": s["client_email"], "client_id": s["client_id"],
+            "auth_uri": s["auth_uri"], "token_uri": s["token_uri"],
             "auth_provider_x509_cert_url": s["auth_provider_x509_cert_url"],
             "client_x509_cert_url": s["client_x509_cert_url"]
         }
         
         gc = gspread.service_account_from_dict(credentials)
-        # Link file Sheets của Như
+        # Link file của Như
         sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1pX1uImwD770upHdJ4OKNzYxwKxd5qVeI2zQeW0SBLUg/edit")
         
-        # Dùng worksheet("Trang tính1") để khớp với file của Như
+        # Thử kết nối vào Trang tính1
         return sh.worksheet("Trang tính1")
     except Exception as e:
-        # Chỉ hiện lỗi khi thực sự không kết nối được
+        # Dòng này sẽ hiện lỗi THẬT SỰ lên màn hình để Như biết đường sửa
+        st.error(f"❌ Lỗi kỹ thuật chi tiết: {str(e)}")
         return None
-
 # 2. Hàm đọc dữ liệu
 def load_data():
     # Gọi kết nối ngay bên trong hàm để chắc chắn có biến 'sheet'
