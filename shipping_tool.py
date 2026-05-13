@@ -8,6 +8,11 @@ st.set_page_config(page_title="Quản lý Phí Giao Hàng", layout="wide")
 
 def connect_gsheet():
     try:
+        # Kiểm tra xem secrets có tồn tại không
+        if "connections" not in st.secrets:
+            st.error("❌ Chưa cấu hình Secrets trên Streamlit Cloud!")
+            return None
+            
         s = st.secrets["connections"]["gsheets"]
         p_key = s["private_key"].replace("\\n", "\n")
         
@@ -23,31 +28,27 @@ def connect_gsheet():
         gc = gspread.service_account_from_dict(credentials)
         # Link file của Như
         sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1pX1uImwD770upHdJ4OKNzYxwKxd5qVeI2zQeW0SBLUg/edit")
-        
-        # Thử kết nối vào Trang tính1
         return sh.worksheet("Trang tính1")
     except Exception as e:
-        # Dòng này sẽ hiện lỗi THẬT SỰ lên màn hình để Như biết đường sửa
-        st.error(f"❌ Lỗi kỹ thuật chi tiết: {str(e)}")
+        st.error(f"❌ Lỗi kết nối chi tiết: {str(e)}")
         return None
-# 2. Hàm đọc dữ liệu
+
+# 2. Hàm đọc dữ liệu an toàn
 def load_data():
-    # Gọi kết nối ngay bên trong hàm để chắc chắn có biến 'sheet'
-    sheet = connect_gsheet() 
-    if sheet:
+    local_sheet = connect_gsheet() 
+    if local_sheet is not None:
         try:
-            data = sheet.get_all_records()
+            data = local_sheet.get_all_records()
             df = pd.DataFrame(data)
             if not df.empty:
-                # Ép kiểu dữ liệu đúng tên cột Như đã sửa
                 df['Ngày giao'] = pd.to_datetime(df['Ngày giao'], dayfirst=True, errors='coerce')
                 df['Phí (VNĐ)'] = pd.to_numeric(df['Phí (VNĐ)'], errors='coerce').fillna(0)
                 return df.dropna(subset=['Ngày giao'])
-        except:
-            pass
+        except Exception as e:
+            st.warning(f"Đã kết nối nhưng chưa có dữ liệu chuẩn: {e}")
     return pd.DataFrame(columns=["Ngày giao", "Nội dung đơn hàng", "Đơn vị vận chuyển", "Phí (VNĐ)"])
 
-# Khởi tạo dữ liệu
+# Khởi tạo dữ liệu ban đầu
 if 'carriers' not in st.session_state:
     st.session_state.carriers = ["Ahamove 🛵", "Grab 🚗", "Lalamove 🚛", "GHTK 📦"]
 
@@ -56,19 +57,9 @@ if 'df' not in st.session_state:
 
 st.title("🚚 Quản Lý Chi Phí Giao Hàng")
 
-# --- SIDEBAR ---
-with st.sidebar:
-    st.header("⚙️ Cài đặt")
-    new_c = st.text_input("Thêm đơn vị mới")
-    if st.button("Lưu đơn vị"):
-        if new_c and new_c not in st.session_state.carriers:
-            st.session_state.carriers.append(new_c)
-            st.rerun()
-
 # --- NÚT CẬP NHẬT ---
-if st.button("🔄 Cập nhật dữ liệu (Đọc từ Google Sheets)"):
+if st.button("🔄 Cập nhật dữ liệu từ Sheets"):
     st.session_state.df = load_data()
-    st.success("Đã đồng bộ dữ liệu mới nhất! ✅")
     st.rerun()
 
 # --- FORM NHẬP LIỆU ---
@@ -83,39 +74,35 @@ with st.form("input_form", clear_on_submit=True):
         carrier_val = st.selectbox("Đơn vị vận chuyển", st.session_state.carriers)
         price_val = st.number_input("Phí (VNĐ)", min_value=0, step=1000, format="%d")
     
-    if st.form_submit_button("💾 Lưu thông tin"):
+    submit = st.form_submit_button("💾 Lưu thông tin")
+    
+    if submit:
         if content_val and price_val > 0:
-            # Kết nối để lưu
-            target_sheet = connect_gsheet()
-            if target_sheet:
+            write_sheet = connect_gsheet()
+            if write_sheet is not None:
                 new_row = [date_val.strftime('%d/%m/%Y'), content_val, carrier_val, price_val]
-                target_sheet.append_row(new_row)
-                
-                # Cập nhật lại giao diện
+                write_sheet.append_row(new_row)
                 st.session_state.df = load_data()
                 st.balloons()
                 st.success("Đã lưu thành công! ✅")
                 st.rerun()
             else:
-                st.error("Không thể kết nối với Sheets để lưu!")
+                st.error("Không thể kết nối để ghi dữ liệu!")
         else:
-            st.warning("Vui lòng điền đủ thông tin!")
+            st.warning("Vui lòng nhập đủ Nội dung và Phí!")
 
 # --- HIỂN THỊ DANH SÁCH ---
 st.write("---")
 if not st.session_state.df.empty:
     df_display = st.session_state.df.copy()
     df_display['Tháng_Năm'] = df_display['Ngày giao'].dt.strftime('%m/%Y')
-    
     months = sorted(df_display['Tháng_Năm'].unique(), reverse=True)
     sel_month = st.selectbox("📅 Chọn tháng:", months)
     
     month_data = df_display[df_display['Tháng_Năm'] == sel_month].copy()
-    
     st.info(f"💰 **Tổng cộng tháng {sel_month}: {month_data['Phí (VNĐ)'].sum():,.0f} VNĐ**")
     
-    # Định dạng hiển thị ngày
     month_data['Ngày giao'] = month_data['Ngày giao'].dt.strftime('%d/%m/%Y')
     st.dataframe(month_data.iloc[::-1], use_container_width=True, hide_index=True)
 else:
-    st.write("Chưa có dữ liệu. Hãy thêm chuyến mới hoặc bấm Cập nhật.")
+    st.write("Chưa có dữ liệu hiển thị.")
