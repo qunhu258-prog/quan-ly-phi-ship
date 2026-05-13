@@ -1,30 +1,47 @@
-﻿import streamlit as st
-from streamlit_gsheets import GSheetsConnection
+import streamlit as st
+from st_gsheets_connection import GSheetsConnection
 import pandas as pd
 from datetime import datetime
 
+# 1. Cấu hình trang
 st.set_page_config(page_title="Quản lý Phí Giao Hàng", layout="wide")
 
-# Kết nối với Google Sheets
+# 2. Kết nối Google Sheets
+# Chú ý: SHEET_URL này Như thay bằng link file Sheets của Như nhé
 conn = st.connection("gsheets", type=GSheetsConnection)
+SHEET_URL = "https://docs.google.com/spreadsheets/d/THAY_ID_CUA_NHU_TAI_DAY/edit#gid=0"
 
-# Link file Sheets của Như (đã bật quyền Editor cho Client Email)
-SHEET_URL = "https://docs.google.com/spreadsheets/d/ID_CUA_NHU/edit"
-
-# 1. Hàm đọc dữ liệu
 def load_data():
-    return conn.read(spreadsheet=SHEET_URL, usecols=[0, 1, 2, 3])
+    return conn.read(spreadsheet=SHEET_URL, ttl="0")
 
-st.title("🚚 Quản Lý Phí Ship - Tự Động Lưu Sheets")
+# Khởi tạo danh sách đơn vị vận chuyển (Sidebar)
+if 'carriers' not in st.session_state:
+    st.session_state.carriers = ["Ahamove 🛵", "Grab 🚗", "Lalamove 🚛", "GHTK 📦"]
 
-# Nút cập nhật (Đúng ý Như: Đọc lại từ Sheets ngay lập tức)
-if st.button("🔄 Cập nhật dữ liệu"):
+st.title("🚚 Quản Lý Phí Ship (Ghi thẳng vào Sheets)")
+
+# --- SIDEBAR: QUẢN LÝ ĐƠN VỊ ---
+with st.sidebar:
+    st.header("⚙️ Cài đặt")
+    new_c = st.text_input("Thêm đơn vị mới")
+    if st.button("Lưu đơn vị"):
+        if new_c and new_c not in st.session_state.carriers:
+            st.session_state.carriers.append(new_c)
+            st.rerun()
+    
+    st.write("---")
+    carrier_to_del = st.selectbox("Xóa đơn vị", st.session_state.carriers)
+    if st.button("🗑️ Xóa đơn vị"):
+        st.session_state.carriers.remove(carrier_to_del)
+        st.rerun()
+
+# --- NÚT CẬP NHẬT ---
+if st.button("🔄 Cập nhật dữ liệu từ Sheets"):
     st.cache_data.clear()
     st.rerun()
 
-# --- SIDEBAR & FORM NHẬP LIỆU (Giữ nguyên giao diện của Như) ---
-# ... (Phần Sidebar thêm/xóa ĐVVC Như giữ nguyên nhé) ...
-
+# --- FORM NHẬP LIỆU ---
+st.subheader("➕ Thêm chuyến mới")
 with st.form("input_form", clear_on_submit=True):
     col1, col2, col3 = st.columns([1, 2, 1])
     with col1:
@@ -32,32 +49,29 @@ with st.form("input_form", clear_on_submit=True):
     with col2:
         content = st.text_input("Nội dung đơn hàng")
     with col3:
-        carrier = st.selectbox("Đơn vị vận chuyển", ["Grab", "Ahamove", "Lalamove"]) # Hoặc list từ sidebar
-        price = st.number_input("Phí (VNĐ)", min_value=0, step=1000)
-
+        carrier = st.selectbox("Đơn vị vận chuyển", st.session_state.carriers)
+        price = st.number_input("Phí (VNĐ)", min_value=0, step=1000, format="%d")
+    
     if st.form_submit_button("💾 Lưu thông tin"):
         if content and price > 0:
-            # Đọc dữ liệu cũ
             existing_data = load_data()
-            
-            # Tạo dòng mới
             new_row = pd.DataFrame([{
                 "Ngày": date.strftime('%d/%m/%Y'),
                 "Nội dung": content,
                 "Đơn vị vận chuyển": carrier,
                 "Phí": price
             }])
-            
-            # Gộp lại và GHI THẲNG LÊN SHEETS
             updated_df = pd.concat([existing_data, new_row], ignore_index=True)
-            conn.update(spreadsheet=SHEET_URL, data=updated_df)
             
-            st.success("Đã ghi vào Google Sheets thành công! ✅")
-            st.cache_data.clear() # Xóa cache để bảng bên dưới hiện dòng mới ngay
+            # Ghi dữ liệu lên Sheets
+            conn.update(spreadsheet=SHEET_URL, data=updated_df)
+            st.success("Đã ghi vào Google Sheets! ✅")
+            st.cache_data.clear()
             st.rerun()
 
 # --- HIỂN THỊ DANH SÁCH ---
 st.write("---")
 data = load_data()
 if not data.empty:
-    st.dataframe(data.iloc[::-1], use_container_width=True) # Hiện chuyến mới nhất lên đầu
+    # Đảo ngược bảng để chuyến mới nhất lên đầu
+    st.dataframe(data.iloc[::-1], use_container_width=True)
