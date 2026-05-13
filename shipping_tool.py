@@ -4,12 +4,13 @@ from datetime import datetime
 import os
 import io
 
-# Cấu hình trang
+# 1. Cấu hình trang
 st.set_page_config(page_title="Quản lý Phí Giao Hàng", layout="wide")
 
 DATA_FILE = "shipping_data.csv"
 CARRIER_FILE = "carriers.csv"
 
+# 2. Các hàm bổ trợ dữ liệu
 def load_data():
     if os.path.exists(DATA_FILE):
         try:
@@ -21,39 +22,65 @@ def load_data():
     return pd.DataFrame(columns=["Ngày", "Nội dung", "Đơn vị vận chuyển", "Phí"])
 
 def load_carriers():
+    default_carriers = ["Ahamove 🛵", "Grab 🚗", "Lalamove 🚛", "GHTK 📦"]
     if os.path.exists(CARRIER_FILE):
         try:
             return pd.read_csv(CARRIER_FILE, encoding='utf-8-sig')['Tên'].tolist()
         except:
-            return ["Ahamove 🛵", "Grab 🚗", "Lalamove 🚛", "GHTK 📦"]
-    return ["Ahamove 🛵", "Grab 🚗", "Lalamove 🚛", "GHTK 📦"]
+            return default_carriers
+    return default_carriers
 
 def save_carrier(new_name):
     carriers = load_carriers()
-    if new_name not in carriers:
+    if new_name and new_name not in carriers:
         carriers.append(new_name)
         pd.DataFrame(carriers, columns=['Tên']).to_csv(CARRIER_FILE, index=False, encoding='utf-8-sig')
         return True
     return False
 
+def delete_carrier(name_to_delete):
+    carriers = load_carriers()
+    if name_to_delete in carriers:
+        carriers.remove(name_to_delete)
+        pd.DataFrame(carriers, columns=['Tên']).to_csv(CARRIER_FILE, index=False, encoding='utf-8-sig')
+        return True
+    return False
+
+# Khởi tạo dữ liệu vào session_state
 if 'df' not in st.session_state:
     st.session_state.df = load_data()
 
-carrier_list = load_carriers()
-
+# 3. Giao diện chính
 st.title("🚚 Quản Lý Chi Phí Giao Hàng")
 
-# --- PHẦN 1: CÀI ĐẶT ---
+# --- PHẦN 1: CÀI ĐẶT (Sidebar) ---
 with st.sidebar:
     st.header("⚙️ Cài đặt")
+    
+    # Thêm đơn vị mới
     new_carrier = st.text_input("Thêm đơn vị mới")
     if st.button("Lưu đơn vị"):
-        if new_carrier:
-            if save_carrier(new_carrier):
-                st.success("Đã lưu đơn vị mới! ✨")
-                st.rerun()
+        if save_carrier(new_carrier):
+            st.success(f"Đã thêm: {new_carrier} ✨")
+            st.rerun()
+    
+    st.write("---")
+    
+    # Xóa đơn vị vận chuyển (Yêu cầu mới)
+    carrier_list = load_carriers()
+    carrier_to_del = st.selectbox("Chọn đơn vị muốn xóa", carrier_list)
+    if st.button("🗑️ Xóa đơn vị vận chuyển"):
+        if delete_carrier(carrier_to_del):
+            st.warning(f"Đã xóa: {carrier_to_del}")
+            st.rerun()
 
-# --- PHẦN 2: NHẬP LIỆU ---
+# --- PHẦN 2: CẬP NHẬT DỮ LIỆU (Nút thay cho F5) ---
+# Đặt nút cập nhật ngay dưới tiêu đề chính
+if st.button("🔄 Cập nhật/Làm mới dữ liệu"):
+    st.session_state.df = load_data()
+    st.success("Dữ liệu đã được cập nhật mới nhất! ✅")
+
+# --- PHẦN 3: NHẬP LIỆU ---
 st.subheader("➕ Thêm chuyến mới")
 with st.form("input_form", clear_on_submit=True):
     col1, col2, col3 = st.columns([1, 2, 1])
@@ -80,7 +107,7 @@ with st.form("input_form", clear_on_submit=True):
             st.balloons()
             st.rerun()
 
-# --- PHẦN 3: HIỂN THỊ & XÓA ---
+# --- PHẦN 4: HIỂN THỊ & XÓA DÒNG ---
 st.write("---")
 st.subheader("📋 Danh sách chi phí")
 
@@ -128,47 +155,40 @@ if not st.session_state.df.empty:
             export_df['Ngày'] = export_df['Ngày'].dt.strftime('%d.%m.%Y')
             export_df.columns = ["Ngày", "Nội dung", "ĐVVC", "Phí"]
             
-            # Ghi dữ liệu vào file
             export_df.to_excel(writer, index=False, sheet_name='Báo cáo', startrow=0)
             
             workbook  = writer.book
             worksheet = writer.sheets['Báo cáo']
 
-            # Định dạng
             header_fmt = workbook.add_format({'bold': True, 'bg_color': '#D9E1F2', 'border': 1, 'align': 'center', 'valign': 'vcenter'})
             content_fmt = workbook.add_format({'border': 1, 'align': 'left'})
             money_fmt = workbook.add_format({'border': 1, 'num_format': '#,##0 "đ"', 'bold': True, 'align': 'right'})
             total_label_fmt = workbook.add_format({'bold': True, 'bg_color': '#FFFF00', 'border': 1, 'align': 'center'})
             total_val_fmt = workbook.add_format({'bold': True, 'bg_color': '#FFFF00', 'border': 1, 'num_format': '#,##0 "đ"', 'align': 'right'})
 
-            # Kẻ khung cho 30 dòng đầu tiên (hoặc nhiều hơn nếu dữ liệu dài)
             num_rows_to_format = max(30, len(export_df))
             for row_num in range(1, num_rows_to_format + 1):
-                worksheet.set_row(row_num, 18) # Chỉnh độ cao dòng cho đẹp
+                worksheet.set_row(row_num, 18)
                 worksheet.write(row_num, 0, "", content_fmt)
                 worksheet.write(row_num, 1, "", content_fmt)
                 worksheet.write(row_num, 2, "", content_fmt)
                 worksheet.write(row_num, 3, "", content_fmt)
 
-            # Ghi lại dữ liệu thực tế lên trên khung đã kẻ
             for i, row in enumerate(export_df.values):
                 worksheet.write(i + 1, 0, row[0], content_fmt)
                 worksheet.write(i + 1, 1, row[1], content_fmt)
                 worksheet.write(i + 1, 2, row[2], content_fmt)
                 worksheet.write(i + 1, 3, row[3], money_fmt)
 
-            # Đẩy dòng Tổng cộng xuống dòng thứ 32 (index 31)
             total_row = 31 
             worksheet.merge_range(total_row, 0, total_row, 2, "TỔNG CỘNG", total_label_fmt)
             worksheet.write(total_row, 3, total, total_val_fmt)
 
-            # Căn chỉnh độ rộng cột
             worksheet.set_column('A:A', 12)
             worksheet.set_column('B:B', 50)
             worksheet.set_column('C:C', 15)
             worksheet.set_column('D:D', 18)
 
-            # Ghi header
             for col_num, value in enumerate(export_df.columns.values):
                 worksheet.write(0, col_num, value, header_fmt)
 
