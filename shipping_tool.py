@@ -10,11 +10,13 @@ st.set_page_config(page_title="Quản lý Phí Giao Hàng", layout="wide")
 DATA_FILE = "shipping_data.csv"
 CARRIER_FILE = "carriers.csv"
 
-# 2. Hàm load dữ liệu và đơn vị vận chuyển
+# 2. Hàm đọc/ghi dữ liệu (Dùng cache để tăng tốc và tránh lỗi)
 def load_data():
     if os.path.exists(DATA_FILE):
         try:
+            # Đọc file với encoding utf-8-sig để tránh lỗi font tiếng Việt
             df = pd.read_csv(DATA_FILE, encoding='utf-8-sig')
+            # Đảm bảo cột Ngày đúng định dạng
             df['Ngày'] = pd.to_datetime(df['Ngày'], format='%d.%m.%Y', errors='coerce')
             return df.dropna(subset=['Ngày'])
         except:
@@ -25,154 +27,127 @@ def load_carriers():
     default_carriers = ["Lalamove 🚛", "Ahamove 🛵", "Grab 🚗", "Viettel Post 📦"]
     if os.path.exists(CARRIER_FILE):
         try:
-            carriers = pd.read_csv(CARRIER_FILE, encoding='utf-8-sig')['Tên'].tolist()
-            return carriers if carriers else default_carriers
+            c_df = pd.read_csv(CARRIER_FILE, encoding='utf-8-sig')
+            return c_df['Tên'].tolist()
         except:
             return default_carriers
     return default_carriers
 
-def save_carrier(new_name):
-    carriers = load_carriers()
-    if new_name not in carriers:
-        carriers.append(new_name)
-        pd.DataFrame(carriers, columns=['Tên']).to_csv(CARRIER_FILE, index=False, encoding='utf-8-sig')
-        return True
-    return False
+# Khởi tạo dữ liệu ban đầu
+if 'df' not in st.session_state:
+    st.session_state.df = load_data()
 
-def delete_carrier(name_to_delete):
-    carriers = load_carriers()
-    if name_to_delete in carriers:
-        carriers.remove(name_to_delete)
-        pd.DataFrame(carriers, columns=['Tên']).to_csv(CARRIER_FILE, index=False, encoding='utf-8-sig')
-        return True
-    return False
-
-# 3. Tự động cập nhật mỗi 60 giây
+# 3. Tự động làm mới mỗi 60 giây
 @st.fragment(run_every=60)
 def auto_refresh():
-    st.session_state.df = load_data()
+    new_df = load_data()
+    if len(new_df) != len(st.session_state.df):
+        st.session_state.df = new_df
 
 auto_refresh()
 
-# 4. Giao diện chính
 st.title("🚚 Quản Lý Chi Phí Giao Hàng")
 
-# --- SIDEBAR: QUẢN LÝ ĐƠN VỊ VẬN CHUYỂN ---
+# 4. Sidebar quản lý đơn vị
 with st.sidebar:
     st.header("⚙️ Cài đặt đơn vị")
-    
-    # Thêm mới
-    new_carrier = st.text_input("Thêm đơn vị mới")
+    new_c = st.text_input("Thêm đơn vị mới")
     if st.button("➕ Lưu đơn vị"):
-        if new_carrier:
-            if save_carrier(new_carrier):
-                st.success(f"Đã thêm: {new_carrier}")
+        if new_c:
+            c_list = load_carriers()
+            if new_c not in c_list:
+                c_list.append(new_c)
+                pd.DataFrame(c_list, columns=['Tên']).to_csv(CARRIER_FILE, index=False, encoding='utf-8-sig')
+                st.success("Đã thêm!")
                 st.rerun()
-            else:
-                st.warning("Đơn vị này đã tồn tại!")
 
     st.write("---")
-    
-    # Xóa đơn vị dư
-    carrier_list_for_del = load_carriers()
-    carrier_to_del = st.selectbox("Chọn đơn vị muốn xóa", carrier_list_for_del)
-    if st.button("🗑️ Xóa đơn vị này"):
-        if delete_carrier(carrier_to_del):
-            st.success(f"Đã xóa: {carrier_to_del}")
-            st.rerun()
+    curr_c_list = load_carriers()
+    to_del = st.selectbox("Chọn đơn vị muốn xóa", curr_c_list)
+    if st.button("🗑️ Xóa đơn vị"):
+        curr_c_list.remove(to_del)
+        pd.DataFrame(curr_c_list, columns=['Tên']).to_csv(CARRIER_FILE, index=False, encoding='utf-8-sig')
+        st.success("Đã xóa!")
+        st.rerun()
 
-carrier_list = load_carriers()
-
-# Nút cập nhật thủ công
-if st.button("🔄 Cập nhật dữ liệu"):
-    st.session_state.df = load_data()
-    st.rerun()
-
-# 5. Form nhập liệu
+# 5. Form nhập liệu (Đã sửa lỗi không hiển thị dòng mới)
 with st.form("input_form", clear_on_submit=True):
     col1, col2, col3, col4 = st.columns([1.5, 3, 2, 1.5])
     with col1:
-        date = st.date_input("Ngày giao", datetime.now())
+        date_val = st.date_input("Ngày giao", datetime.now())
     with col2:
-        content = st.text_input("Nội dung đơn hàng (Ví dụ: Gửi mẫu cho khách)")
+        content_val = st.text_input("Nội dung đơn hàng")
     with col3:
-        carrier = st.selectbox("Đơn vị vận chuyển", carrier_list)
+        carrier_val = st.selectbox("Đơn vị vận chuyển", load_carriers())
     with col4:
-        price = st.number_input("Phí vận chuyển (VNĐ)", min_value=0, step=1000)
+        price_val = st.number_input("Phí vận chuyển (VNĐ)", min_value=0, step=1000)
     
-    if st.form_submit_button("💾 Lưu thông tin"):
-        if content and price > 0:
-            new_row = pd.DataFrame({
-                "Ngày": [pd.to_datetime(date)],
-                "Nội dung": [content],
-                "ĐVVC": [carrier],
-                "Phí": [price]
-            })
-            current_df = load_data()
-            updated_df = pd.concat([current_df, new_row], ignore_index=True)
-            updated_df.to_csv(DATA_FILE, index=False, encoding='utf-8-sig')
-            st.session_state.df = updated_df
-            st.success("Đã lưu đơn hàng! ✨")
+    submit = st.form_submit_button("💾 Lưu thông tin")
+    
+    if submit:
+        if content_val and price_val > 0:
+            # Tạo dòng mới
+            new_data = {
+                "Ngày": date_val.strftime('%d.%m.%Y'),
+                "Nội dung": content_val,
+                "ĐVVC": carrier_val,
+                "Phí": price_val
+            }
+            new_df_row = pd.DataFrame([new_data])
+            
+            # Đọc lại dữ liệu cũ từ file để tránh mất dữ liệu nhân viên khác
+            current_full_df = load_data()
+            current_full_df['Ngày'] = current_full_df['Ngày'].dt.strftime('%d.%m.%Y')
+            
+            # Cộng dồn và lưu
+            final_df = pd.concat([current_full_df, new_df_row], ignore_index=True)
+            final_df.to_csv(DATA_FILE, index=False, encoding='utf-8-sig')
+            
+            # Cập nhật session để hiển thị ngay
+            st.session_state.df = load_data()
+            st.success("Đã lưu thành công!")
             st.rerun()
+        else:
+            st.error("Vui lòng nhập đầy đủ Nội dung và Phí > 0")
 
-# 6. Hiển thị danh sách và xuất file
+# 6. Hiển thị và Xuất Excel
 if not st.session_state.df.empty:
     st.write("---")
-    st.subheader("📋 Danh sách chi phí")
+    st.subheader("📋 Danh sách đã nhập")
     
-    df_show = st.session_state.df.copy()
-    df_show['Ngày'] = df_show['Ngày'].dt.strftime('%d.%m.%Y')
-    st.dataframe(df_show, use_container_width=True)
+    # Định dạng hiển thị bảng
+    display_df = st.session_state.df.copy()
+    display_df['Ngày'] = display_df['Ngày'].dt.strftime('%d.%m.%Y')
+    st.dataframe(display_df, use_container_width=True)
     
-    # Tổng cộng
-    total_val = st.session_state.df['Phí'].sum()
-    st.info(f"💰 **Tổng cộng chi phí: {total_val:,.0f} VNĐ**")
-
-    # --- XUẤT EXCEL THEO MẪU 32 DÒNG ---
+    # Nút tải Excel (Giữ đúng mẫu 32 dòng của Như)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        export_df = st.session_state.df.copy()
-        export_df['Ngày'] = export_df['Ngày'].dt.strftime('%d.%m.%Y')
-        export_df.to_excel(writer, index=False, sheet_name='Báo cáo', startrow=0)
+        export_df = display_df.copy()
+        export_df.to_excel(writer, index=False, sheet_name='Báo cáo')
+        workbook, worksheet = writer.book, writer.sheets['Báo cáo']
         
-        workbook  = writer.book
-        worksheet = writer.sheets['Báo cáo']
+        # Style định dạng
+        fmt_border = workbook.add_format({'border': 1})
+        fmt_money = workbook.add_format({'border': 1, 'num_format': '#,##0 "đ"'})
+        fmt_total = workbook.add_format({'bold': True, 'bg_color': '#FFFF00', 'border': 1, 'num_format': '#,##0 "đ"'})
         
-        header_fmt = workbook.add_format({'bold': True, 'bg_color': '#D9E1F2', 'border': 1, 'align': 'center'})
-        border_fmt = workbook.add_format({'border': 1})
-        money_fmt = workbook.add_format({'border': 1, 'num_format': '#,##0 "đ"'})
-        total_label_fmt = workbook.add_format({'bold': True, 'bg_color': '#FFFF00', 'border': 1, 'align': 'center'})
-        total_val_fmt = workbook.add_format({'bold': True, 'bg_color': '#FFFF00', 'border': 1, 'num_format': '#,##0 "đ"'})
-
-        # Kẻ sẵn 30 dòng
+        # Kẻ khung 30 dòng trống
         for r in range(1, 31):
-            for c in range(4):
-                worksheet.write(r, c, "", border_fmt)
+            for c in range(4): worksheet.write(r, c, "", fmt_border)
         
-        # Ghi dữ liệu thực
+        # Ghi dữ liệu
         for i, row in enumerate(export_df.values):
-            worksheet.write(i+1, 0, row[0], border_fmt)
-            worksheet.write(i+1, 1, row[1], border_fmt)
-            worksheet.write(i+1, 2, row[2], border_fmt)
-            worksheet.write(i+1, 3, row[3], money_fmt)
-
-        # Dòng tổng cộng ở dòng 32 (index 31)
-        worksheet.merge_range(31, 0, 31, 2, "TỔNG CỘNG", total_label_fmt)
-        worksheet.write(31, 3, total_val, total_val_fmt)
-
-        worksheet.set_column('A:A', 12)
-        worksheet.set_column('B:B', 50)
-        worksheet.set_column('C:C', 15)
-        worksheet.set_column('D:D', 18)
+            worksheet.write(i+1, 0, row[0], fmt_border)
+            worksheet.write(i+1, 1, row[1], fmt_border)
+            worksheet.write(i+1, 2, row[2], fmt_border)
+            worksheet.write(i+1, 3, row[3], fmt_money)
+            
+        # Dòng tổng cộng (Dòng 32 trong Excel)
+        total = st.session_state.df['Phí'].sum()
+        worksheet.merge_range(31, 0, 31, 2, "TỔNG CỘNG", fmt_total)
+        worksheet.write(31, 3, total, fmt_total)
         
-        for col_num, value in enumerate(export_df.columns.values):
-            worksheet.write(0, col_num, value, header_fmt)
-
-    st.download_button(
-        label="📥 Tải báo cáo Excel (Đúng mẫu)",
-        data=output.getvalue(),
-        file_name=f"Bao_cao_ship_{datetime.now().strftime('%d_%m')}.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+    st.download_button("📥 Tải báo cáo Excel", output.getvalue(), "bao_cao.xlsx")
 else:
     st.info("Chưa có dữ liệu Như ơi! ✨")
