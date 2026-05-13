@@ -39,7 +39,7 @@ def connect_gsheet():
         st.error(f"⚠️ Lỗi kết nối: {str(e)}")
         return None
 
-sheet = connect_gsheet()
+# sheet = connect_gsheet()
 
 # 2. Hàm đọc dữ liệu
 def load_data():
