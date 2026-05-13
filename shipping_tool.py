@@ -3,10 +3,15 @@ import pandas as pd
 from datetime import datetime
 import gspread
 
+# 1. Cấu hình trang luôn nằm trên cùng
 st.set_page_config(page_title="Quản lý Phí Giao Hàng", layout="wide")
 
+# 2. Hàm kết nối (Không để lỗi này làm sập cả app)
 def connect_to_sheet():
     try:
+        if "connections" not in st.secrets:
+            return None, "Thiếu cấu hình Secrets trong App Settings"
+        
         c = st.secrets["connections"]["gsheets"]
         p_key = c["private_key"].replace("\\n", "\n")
         
@@ -20,20 +25,32 @@ def connect_to_sheet():
         }
         
         gc = gspread.service_account_from_dict(creds)
-        
-        # PHƯƠNG ÁN 1: Mở bằng ID (Lấy từ URL của Như: 1pX1uImwD770upHdJ4OKNzYxwKxd5qVeI2zQeW0SBLUg)
         sheet_id = "1pX1uImwD770upHdJ4OKNzYxwKxd5qVeI2zQeW0SBLUg"
         sh = gc.open_by_key(sheet_id)
-        
         return sh.get_worksheet(0), None
     except Exception as e:
         return None, str(e)
 
-# --- GIAO DIỆN ---
-st.title("🚚 Quản Lý Chi Phí Giao Hàng")
-
+# --- 3. PHẦN SIDEBAR (Luôn luôn hiện diện) ---
 if 'ds_donvi' not in st.session_state:
     st.session_state.ds_donvi = ["Ahamove 🛵", "Grab 🚗", "Lalamove 🚛", "GHTK 📦"]
+
+with st.sidebar:
+    st.header("⚙️ Cài đặt")
+    moi = st.text_input("Thêm đơn vị mới")
+    if st.button("Thêm"):
+        if moi and moi not in st.session_state.ds_donvi:
+            st.session_state.ds_donvi.append(moi)
+            st.rerun()
+    
+    st.write("---")
+    xoa = st.selectbox("Xóa đơn vị", st.session_state.ds_donvi)
+    if st.button("Xóa"):
+        st.session_state.ds_donvi.remove(xoa)
+        st.rerun()
+
+# --- 4. GIAO DIỆN CHÍNH ---
+st.title("🚚 Quản Lý Chi Phí Giao Hàng")
 
 with st.form("form_nhap", clear_on_submit=True):
     col1, col2, col3 = st.columns([1, 2, 1])
@@ -42,18 +59,19 @@ with st.form("form_nhap", clear_on_submit=True):
     dv = col3.selectbox("Đơn vị", st.session_state.ds_donvi)
     tien = col3.number_input("Phí (VNĐ)", min_value=0, step=1000)
     
-    if st.form_submit_button("💾 Lưu thông tin"):
+    submit = st.form_submit_button("💾 Lưu thông tin")
+    if submit:
         wks, err = connect_to_sheet()
         if wks:
             wks.append_row([ngay.strftime('%d/%m/%Y'), nd, dv, tien])
-            st.success("Lưu thành công rồi Như ơi! Đi nghỉ thôi nào! ✅")
+            st.success("Lưu thành công rồi Như ơi! ✅")
             st.balloons()
-            st.rerun()
         else:
-            st.error(f"Lỗi kết nối chi tiết: {err}")
+            st.error(f"Lỗi không lưu được: {err}")
 
 st.write("---")
-# Hiển thị bảng dữ liệu
+
+# 5. HIỂN THỊ BẢNG DỮ LIỆU
 wks, err = connect_to_sheet()
 if wks:
     try:
@@ -61,8 +79,9 @@ if wks:
         if data:
             st.dataframe(pd.DataFrame(data).iloc[::-1], use_container_width=True, hide_index=True)
         else:
-            st.info("Bảng đang trống. Như nhớ điền tiêu đề 'Ngày, Nội dung, Đơn vị, Phí' vào hàng 1 của Sheets nhé!")
+            st.info("Bảng đang trống. Như nhớ điền tiêu đề vào hàng 1 của Sheets nhé!")
     except Exception as e:
-        st.warning(f"Đã kết nối nhưng chưa đọc được dữ liệu: {e}")
+        st.warning(f"Kết nối OK nhưng chưa có dữ liệu: {e}")
 else:
-    st.error(f"Kết nối thất bại hoàn toàn: {err}")
+    st.error(f"⚠️ App chưa kết nối được với Google Sheets. Lỗi: {err}")
+    st.info("Như nhớ: 1. Share file Sheets cho email trong Service Account. 2. Kiểm tra lại Secrets.")
