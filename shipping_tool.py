@@ -33,7 +33,7 @@ def connect_gsheet():
         
         gc = gspread.service_account_from_dict(credentials)
         # Link file Sheets của Như từ hình image_56089a.png
-        sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1O5D6X_r9-f_i5-xP_qN-U_fU9nQ66P9kG7H3Z8oQ_M/edit")
+        sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1pX1uImwD770upHdJ4OKNzYxwKxd5qVeI2zQeW0SBLUg/edit")
         return sh.get_worksheet(0)
     except Exception as e:
         st.error(f"⚠️ Lỗi kết nối: {str(e)}")
