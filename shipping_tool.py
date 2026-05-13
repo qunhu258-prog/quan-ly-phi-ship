@@ -12,8 +12,11 @@ def lay_ket_noi():
         
         c = st.secrets["connections"]["gsheets"]
         
-        # XỬ LÝ LỖI PEM: Loại bỏ khoảng trắng và xử lý xuống dòng
-        key = c["private_key"].strip().replace("\\n", "\n")
+        # XỬ LÝ KHÓA (PRIVATE KEY) CỰC MẠNH:
+        # Loại bỏ khoảng trắng thừa và ép định dạng chuẩn
+        raw_key = c["private_key"].strip()
+        # Nếu Như lỡ dán có xuống dòng thật, nó sẽ được xử lý lại
+        key = raw_key.replace("\\n", "\n")
         
         json_key = {
             "type": c["type"], "project_id": c["project_id"],
@@ -25,18 +28,18 @@ def lay_ket_noi():
         }
         
         client = gspread.service_account_from_dict(json_key)
+        # Link sheet của Như
         file_sheet = client.open_by_url("https://docs.google.com/spreadsheets/d/1pX1uImwD770upHdJ4OKNzYxwKxd5qVeI2zQeW0SBLUg/edit")
         return file_sheet.worksheet("Trang tính1")
     except Exception as error:
-        return f"Lỗi PEM/Kết nối: {str(error)}"
+        return f"Lỗi chìa khóa: {str(error)}"
 
-# --- GIỮ NGUYÊN PHẦN GIAO DIỆN PHÍA DƯỚI ---
+# --- PHẦN HIỂN THỊ ---
 def tai_du_lieu():
     kq = lay_ket_noi()
     if not isinstance(kq, str):
         try:
-            data = kq.get_all_records()
-            return pd.DataFrame(data)
+            return pd.DataFrame(kq.get_all_records())
         except: pass
     return pd.DataFrame()
 
@@ -52,12 +55,6 @@ with st.sidebar:
         if moi and moi not in st.session_state.ds_donvi:
             st.session_state.ds_donvi.append(moi)
             st.rerun()
-    st.write("---")
-    xoa = st.selectbox("Xóa đơn vị", st.session_state.ds_donvi)
-    if st.button("Xóa"):
-        if len(st.session_state.ds_donvi) > 1:
-            st.session_state.ds_donvi.remove(xoa)
-            st.rerun()
 
 with st.form("form_nhap", clear_on_submit=True):
     col1, col2, col3 = st.columns([1, 2, 1])
@@ -67,19 +64,18 @@ with st.form("form_nhap", clear_on_submit=True):
     tien = col3.number_input("Phí (VNĐ)", min_value=0, step=1000)
     
     if st.form_submit_button("💾 Lưu thông tin"):
-        ket_qua_luu = lay_ket_noi()
-        if not isinstance(ket_qua_luu, str):
-            # Định dạng ngày về dd/mm/yyyy để Sheets dễ hiểu
-            ket_qua_luu.append_row([ngay.strftime('%d/%m/%Y'), nd, dv, tien])
-            st.success("Lưu thành công!")
+        sh = lay_ket_noi()
+        if not isinstance(sh, str):
+            sh.append_row([ngay.strftime('%d/%m/%Y'), nd, dv, tien])
+            st.success("Đã lưu vào Sheets thành công! ✅")
             st.balloons()
             st.rerun()
         else:
-            st.error(f"Không thể lưu. {ket_qua_luu}")
+            st.error(sh)
 
 df = tai_du_lieu()
 if not df.empty:
     st.write("---")
     st.dataframe(df.iloc[::-1], use_container_width=True, hide_index=True)
 else:
-    st.write("Chưa có dữ liệu hoặc lỗi kết nối.")
+    st.write("Chưa có dữ liệu hoặc lỗi kết nối chìa khóa.")
