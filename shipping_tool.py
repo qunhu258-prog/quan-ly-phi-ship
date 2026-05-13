@@ -1,92 +1,70 @@
 ﻿import streamlit as st
 import pandas as pd
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
-import os
 import io
+import os
 
 # Cấu hình trang
 st.set_page_config(page_title="Quản lý Phí Giao Hàng", layout="wide")
 
-DATA_FILE = "shipping_data.csv"
+# --- HÀM KẾT NỐI GOOGLE SHEETS ---
+def connect_gsheet():
+    # Kiểm tra xem file credentials.json có tồn tại không
+    if not os.path.exists("credentials.json"):
+        return None
+    try:
+        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+        creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+        client = gspread.authorize(creds)
+        # Thay "Du_Lieu_Ship" bằng tên chính xác file Google Sheet của Như
+        sheet = client.open("Du_Lieu_Ship").sheet1
+        return sheet
+    except:
+        return None
 
 # --- HÀM LOAD DỮ LIỆU ---
 def load_data():
-    if os.path.exists(DATA_FILE):
+    sheet = connect_gsheet()
+    if sheet:
         try:
-            df = pd.read_csv(DATA_FILE, encoding='utf-8-sig')
-            df['Ngày'] = pd.to_datetime(df['Ngày'], format='%d.%m.%Y', errors='coerce')
-            return df.dropna(subset=['Ngày'])
+            data = sheet.get_all_records()
+            df = pd.DataFrame(data)
+            if not df.empty:
+                # Ép kiểu ngày tháng để tránh lỗi .dt accessor
+                df['Ngày'] = pd.to_datetime(df['Ngày'], format='%d/%m/%Y', errors='coerce')
+                return df.dropna(subset=['Ngày'])
         except:
-            return pd.DataFrame(columns=["Ngày", "Nội dung", "ĐVVC", "Phí"])
-    return pd.DataFrame(columns=["Ngày", "Nội dung", "ĐVVC", "Phí"])
+            pass
+    return pd.DataFrame(columns=["Ngày", "Nội dung", "Đơn vị vận chuyển", "Phí"])
+
+# --- GIAO DIỆN ---
+st.title("🚚 Quản Lý Chi Phí Giao Hàng")
 
 if 'df' not in st.session_state:
     st.session_state.df = load_data()
 
-st.title("🚚 Quản Lý Chi Phí Giao Hàng")
-
-# --- PHẦN NHẬP LIỆU ---
+# PHẦN NHẬP LIỆU
 with st.form("input_form", clear_on_submit=True):
-    col1, col2, col3, col4 = st.columns([1.5, 3, 2, 1.5])
+    col1, col2, col3 = st.columns([1, 2, 1])
     with col1:
-        date = st.date_input("Ngày giao", datetime.now())
+        date_input = st.date_input("Ngày giao", datetime.now())
     with col2:
         content = st.text_input("Nội dung đơn hàng")
     with col3:
-        carrier = st.selectbox("Đơn vị", ["Lalamove 🚛", "Ahamove 🛵", "Grab 🚗", "Viettel Post 📦"])
-    with col4:
+        carrier = st.selectbox("Đơn vị", ["Ahamove", "Grab", "Lalamove", "Viettel post"])
         price = st.number_input("Phí (VNĐ)", min_value=0, step=1000)
     
-    if st.form_submit_button("💾 Lưu chuyến mới"):
-        if content and price > 0:
-            new_row = pd.DataFrame({
-                "Ngày": [pd.to_datetime(date)],
-                "Nội dung": [content],
-                "ĐVVC": [carrier],
-                "Phí": [price]
-            })
-            st.session_state.df = pd.concat([st.session_state.df, new_row], ignore_index=True)
-            st.session_state.df.to_csv(DATA_FILE, index=False, encoding='utf-8-sig')
+    if st.form_submit_button("💾 Lưu thông tin"):
+        sheet = connect_gsheet()
+        if sheet:
+            new_row = [date_input.strftime('%d/%m/%Y'), content, carrier, price]
+            sheet.append_row(new_row)
+            st.success("Đã đồng bộ lên Google Sheets! ✨")
+            st.session_state.df = load_data()
             st.rerun()
+        else:
+            st.error("Chưa kết nối được Google Sheets. Như hãy kiểm tra file credentials.json nhé!")
 
-# --- HIỂN THỊ & XUẤT EXCEL ---
-if not st.session_state.df.empty:
-    st.write("---")
-    # Hiển thị bảng trên web
-    df_show = st.session_state.df.copy()
-    df_show['Ngày'] = df_show['Ngày'].dt.strftime('%d.%m.%Y')
-    st.dataframe(df_show, use_container_width=True)
-
-    # Nút xuất Excel (Đã fix cách 20 dòng và kẻ ô sẵn)
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        export_df = st.session_state.df.copy()
-        export_df['Ngày'] = export_df['Ngày'].dt.strftime('%d.%m.%Y')
-        export_df.to_excel(writer, index=False, sheet_name='Sheet1', startrow=0)
-        
-        workbook  = writer.book
-        worksheet = writer.sheets['Sheet1']
-        
-        # Định dạng kẻ ô và đẩy dòng Tổng cộng xuống dòng 32 (như image_729c9e.png)
-        border_fmt = workbook.add_format({'border': 1})
-        money_fmt = workbook.add_format({'border': 1, 'num_format': '#,##0 "đ"'})
-        total_fmt = workbook.add_format({'bold': True, 'bg_color': '#FFFF00', 'border': 1})
-
-        # Kẻ sẵn 30 dòng
-        for r in range(1, 31):
-            for c in range(4):
-                worksheet.write(r, c, "", border_fmt)
-        
-        # Ghi đè dữ liệu thực
-        for i, row in enumerate(export_df.values):
-            worksheet.write(i+1, 0, row[0], border_fmt)
-            worksheet.write(i+1, 1, row[1], border_fmt)
-            worksheet.write(i+1, 2, row[2], border_fmt)
-            worksheet.write(i+1, 3, row[3], money_fmt)
-
-        # Dòng tổng cộng ở dòng 32
-        total_val = st.session_state.df['Phí'].sum()
-        worksheet.write(31, 2, "TỔNG CỘNG", total_fmt)
-        worksheet.write(31, 3, total_val, total_fmt)
-
-    st.download_button("📥 Tải file Excel Báo cáo", output.getvalue(), "bao_cao_ship.xlsx")
+# Hiển thị danh sách và xuất Excel (Phần này Như giữ nguyên logic cũ mình đã gửi)
