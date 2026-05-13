@@ -84,7 +84,7 @@ with st.sidebar:
 carrier_list = load_carriers()
 
 # Nút cập nhật thủ công
-if st.button("🔄 Cập nhật dữ liệu ngay lập tức"):
+if st.button("🔄 Cập nhật dữ liệu"):
     st.session_state.df = load_data()
     st.rerun()
 
