@@ -3,16 +3,13 @@ import pandas as pd
 from datetime import datetime
 import gspread
 
+# Cấu hình trang
 st.set_page_config(page_title="Quản lý Phí Giao Hàng", layout="wide")
 
-# Hàm kết nối an toàn
-def get_gsheet_client():
+# Hàm kết nối (Đã tối ưu để không lỗi biến)
+def ket_noi_sheet():
     try:
-        if "connections" not in st.secrets:
-            return None, "Chưa cấu hình Secrets trong App Settings"
-        
         conf = st.secrets["connections"]["gsheets"]
-        # Xử lý ký tự xuống dòng trong private_key
         p_key = conf["private_key"].replace("\\n", "\n")
         
         credentials = {
@@ -52,33 +49,30 @@ with st.sidebar:
 # Khối nhập liệu
 with st.form("form_nhap", clear_on_submit=True):
     c1, c2, c3 = st.columns([1, 2, 1])
-    ngay = c1.date_input("Ngày", datetime.now())
-    nd = c2.text_input("Nội dung")
-    dv = c3.selectbox("Đơn vị", st.session_state.ds_donvi)
-    tien = c3.number_input("Phí (VNĐ)", min_value=0, step=1000)
+    input_ngay = c1.date_input("Ngày", datetime.now())
+    input_nd = c2.text_input("Nội dung")
+    input_dv = c3.selectbox("Đơn vị", st.session_state.ds_donvi)
+    input_tien = c3.number_input("Phí (VNĐ)", min_value=0, step=1000)
     
-    submit = st.form_submit_button("💾 Lưu thông tin")
-    if submit:
-        wks, err = get_gsheet_client()
+    if st.form_submit_button("💾 Lưu thông tin"):
+        wks, err = ket_noi_sheet()
         if wks:
-            wks.append_row([ngay.strftime('%d/%m/%Y'), nd, dv, tien])
+            wks.append_row([input_ngay.strftime('%d/%m/%Y'), input_nd, input_dv, input_tien])
             st.success("Đã lưu thành công! ✅")
             st.balloons()
+            st.rerun()
         else:
-            st.error(f"Lỗi kết nối: {err}")
+            st.error(f"Lỗi: {err}")
 
-# Hiển thị bảng dữ liệu
+# Hiển thị bảng
 st.write("---")
-wks, err = get_gsheet_client()
+wks, err = ket_noi_sheet()
 if wks:
-    try:
-        data = wks.get_all_records()
-        if data:
-            df = pd.DataFrame(data)
-            st.dataframe(df.iloc[::-1], use_container_width=True, hide_index=True)
-        else:
-            st.info("Chưa có dữ liệu trong file Sheets.")
-    except:
-        st.warning("Không thể hiển thị bảng dữ liệu.")
+    data = wks.get_all_records()
+    if data:
+        df = pd.DataFrame(data)
+        st.dataframe(df.iloc[::-1], use_container_width=True, hide_index=True)
+    else:
+        st.info("Chưa có dữ liệu.")
 else:
-    st.error(f"Không thể tải dữ liệu: {err}")
+    st.error(f"Kết nối thất bại: {err}")
