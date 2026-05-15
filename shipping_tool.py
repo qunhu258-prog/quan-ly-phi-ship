@@ -11,7 +11,7 @@ from google.oauth2.service_account import Credentials
 st.set_page_config(layout="wide")
 
 # =========================
-# STYLE PRO TABLE
+# STYLE
 # =========================
 st.markdown("""
 <style>
@@ -40,6 +40,7 @@ st.markdown("""
     padding: 10px 8px;
     border-bottom: 1px solid #eee;
     transition: 0.2s;
+    align-items: center;
 }
 
 /* HOVER */
@@ -47,13 +48,26 @@ st.markdown("""
     background: #f3f6ff;
 }
 
-/* COL */
+/* FIX KHÔNG XUỐNG DÒNG */
+.row div {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* COL WIDTH */
 .c1 { width: 6%; }
 .c2 { width: 14%; }
-.c3 { width: 40%; }
+.c3 { width: 42%; }
 .c4 { width: 18%; }
 .c5 { width: 15%; }
-.c6 { width: 7%; }
+.c6 { width: 5%; }
+
+/* DELETE BUTTON */
+button[kind="secondary"] {
+    background: #ff4b4b;
+    color: white;
+}
 
 .total-box {
     padding: 18px;
@@ -110,17 +124,19 @@ ws = ket_noi_sheet()
 
 
 # =========================
-# SESSION STATE
+# TITLE
+# =========================
+st.title("🚚 QUẢN LÝ CHI PHÍ GIAO HÀNG")
+
+
+# =========================
+# SIDEBAR (giữ đơn vị)
 # =========================
 if "ds_donvi" not in st.session_state:
     st.session_state.ds_donvi = ["Ahamove 🛵", "Grab 🚗", "Lalamove 🚛", "GHTK 📦"]
 
-
-# =========================
-# SIDEBAR (RESTORED)
-# =========================
 with st.sidebar:
-    st.header("⚙️ Đơn vị vận chuyển")
+    st.header("⚙️ Đơn vị")
 
     new = st.text_input("Thêm đơn vị")
 
@@ -136,21 +152,13 @@ with st.sidebar:
             st.session_state.ds_donvi.remove(del_unit)
             st.rerun()
 
-    st.divider()
-
     if st.button("🔄 Làm tươi"):
         st.cache_resource.clear()
         st.rerun()
 
 
 # =========================
-# TITLE
-# =========================
-st.title("🚚 DASHBOARD CHI PHÍ GIAO HÀNG")
-
-
-# =========================
-# FORM NHẬP LIỆU (RESTORED)
+# FORM NHẬP
 # =========================
 with st.form("form_nhap", clear_on_submit=True):
 
@@ -200,20 +208,6 @@ df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang]
 
 
 # =========================
-# KPI
-# =========================
-tong = int(df_f["Phí (VNĐ)"].sum())
-
-c1, c2, c3 = st.columns(3)
-c1.metric("📦 Số đơn", len(df_f))
-c2.metric("💰 Tổng chi", f"{tong:,.0f} VNĐ")
-c3.metric("🚚 TB / đơn", f"{tong/max(len(df_f),1):,.0f}")
-
-
-st.write("---")
-
-
-# =========================
 # HEADER TABLE
 # =========================
 st.markdown("""
@@ -233,15 +227,15 @@ st.markdown("""
 # =========================
 for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
 
-    ngay = row["Ngày"].strftime("%d/%m/%Y") if not pd.isna(row["Ngày"]) else ""
+    ngay_txt = row["Ngày"].strftime("%d/%m/%Y") if not pd.isna(row["Ngày"]) else ""
 
     c1, c2, c3, c4, c5, c6 = st.columns([0.6, 1.4, 4, 2, 1.5, 0.8])
 
     c1.markdown(f"<div class='row c1'>{idx}</div>", unsafe_allow_html=True)
-    c2.markdown(f"<div class='row c2'>{ngay}</div>", unsafe_allow_html=True)
+    c2.markdown(f"<div class='row c2'>{ngay_txt}</div>", unsafe_allow_html=True)
     c3.markdown(f"<div class='row c3'>{row['Nội dung']}</div>", unsafe_allow_html=True)
     c4.markdown(f"<div class='row c4'>{row['Đơn vị']}</div>", unsafe_allow_html=True)
-    c5.markdown(f"<div class='row c5'><b>{row['Phí (VNĐ)']:,} VNĐ</b></div>", unsafe_allow_html=True)
+    c5.markdown(f"<div class='row c5'><b>{row['Phí (VNĐ)']:,}</b></div>", unsafe_allow_html=True)
 
     if c6.button("❌", key=f"del_{i}"):
         ws.delete_rows(i + 2)
@@ -250,8 +244,10 @@ for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
 
 
 # =========================
-# TOTAL
+# TOTAL ONLY
 # =========================
+tong = int(df_f["Phí (VNĐ)"].sum())
+
 st.markdown("---")
 
 st.markdown(f"""
