@@ -31,8 +31,7 @@ def get_conn():
         # ID file của Như: 1pX1uImwD770upHdJ4OKNzYxwKxd5qVeI2zQeW0SBLUg
         sh = gc.open_by_key("1pX1uImwD770upHdJ4OKNzYxwKxd5qVeI2zQeW0SBLUg")
         
-        # Lấy trang tính có tên "Trang tinh1" như trong hình bạn gửi
-        return sh.worksheet("Trang tinh1"), None
+        return sh.worksheet("Trang tính1"), None
     except Exception as e:
         return None, str(e)
 
