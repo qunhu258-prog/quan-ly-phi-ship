@@ -1,23 +1,16 @@
 ﻿import streamlit as st
-import pandas as pd
-from datetime import datetime
 import gspread
+from datetime import datetime  # Thêm dòng này để sửa lỗi image_235062.png
 
-st.set_page_config(page_title="Quản lý Phí Giao Hàng", layout="wide")
-
-# --- KẾT NỐI ---
 def get_conn():
     try:
+        # Lấy dữ liệu trực tiếp từ Secrets (không dùng [gcp_service_account])
         s = st.secrets
-        # Kiểm tra xem các key quan trọng có tồn tại không để tránh lỗi KeyError
-        if "type" not in s:
-            return None, "Chưa cấu hình Secrets hoặc định dạng Secrets bị sai (Thiếu key 'type')"
-            
         creds_dict = {
             "type": s["type"],
             "project_id": s["project_id"],
             "private_key_id": s["private_key_id"],
-            "private_key": s["private_key"].replace("\\n", "\n") if "\\n" in s["private_key"] else s["private_key"],
+            "private_key": s["private_key"],
             "client_email": s["client_email"],
             "client_id": s["client_id"],
             "auth_uri": "https://accounts.google.com/o/oauth2/auth",
@@ -25,12 +18,19 @@ def get_conn():
             "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
             "client_x509_cert_url": s["client_x509_cert_url"]
         }
-        
         gc = gspread.service_account_from_dict(creds_dict)
+        # ID file Sheets của Như từ hình image_2345a2.png
         sh = gc.open_by_key("1pX1uImwD770upHdJ4OKNzYxwKxd5qVeI2zQeW0SBLUg")
         return sh.get_worksheet(0), None
     except Exception as e:
         return None, str(e)
+
+ws, err = get_conn()
+
+if err:
+    st.error(f"Lỗi kết nối: {err}")
+else:
+    st.title("🚚 Quản Lý Chi Phí Giao Hàng")
 
 # --- SIDEBAR QUẢN LÝ ĐƠN VỊ ---
 if 'ds_donvi' not in st.session_state:
