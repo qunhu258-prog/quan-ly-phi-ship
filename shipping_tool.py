@@ -169,6 +169,12 @@ for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
     st.markdown('<hr style="margin:0; border:0.5px solid #f0f2f6;">', unsafe_allow_html=True)
 
 # =========================
+# 8. TỔNG CỘNG (Màu xanh đồng bộ)
+# =========================
+tong = int(df_f["Phí (VNĐ)"].sum())
+st.markdown(f'<div class="total-box">💰 TỔNG CHI PHÍ THÁNG {thang}: {tong:,.0f} VNĐ</div>', unsafe_allow_html=True)
+
+# =========================
 # 8. TỔNG CỘNG
 # =========================
 tong = int(df_f["Phí (VNĐ)"].sum())
