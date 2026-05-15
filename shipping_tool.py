@@ -47,8 +47,31 @@ def ket_noi_sheet():
 
 
 # =========================
-# UI
+# UI STYLE
 # =========================
+st.markdown("""
+<style>
+html, body, [class*="css"] {
+    font-size: 18px;
+}
+
+h1 {
+    font-size: 38px !important;
+    color: #ff4b4b;
+}
+
+.total-box {
+    background: #fff3cd;
+    padding: 12px;
+    border-radius: 12px;
+    font-weight: bold;
+    color: #856404;
+    margin-top: 10px;
+}
+</style>
+""", unsafe_allow_html=True)
+
+
 st.title("🚚 Quản Lý Chi Phí Giao Hàng")
 
 
@@ -68,9 +91,8 @@ if "ds_donvi" not in st.session_state:
 # SIDEBAR
 # =========================
 with st.sidebar:
-    st.header("⚙️ Cài đặt đơn vị")
+    st.header("⚙️ Cài đặt")
 
-    # ➕ thêm đơn vị
     moi = st.text_input("Thêm đơn vị mới")
 
     if st.button("➕ Thêm"):
@@ -78,21 +100,7 @@ with st.sidebar:
             st.session_state.ds_donvi.append(moi)
             st.rerun()
 
-    st.divider()
-
-    # 🗑 xoá đơn vị
-    if st.session_state.ds_donvi:
-        xoa = st.selectbox("Chọn đơn vị để xoá", st.session_state.ds_donvi)
-
-        if st.button("🗑 Xoá đơn vị"):
-            st.session_state.ds_donvi.remove(xoa)
-            st.success("Đã xoá")
-            st.rerun()
-
-    st.divider()
-
-    # 🔄 làm tươi
-    if st.button("🔄 Làm tươi dữ liệu"):
+    if st.button("🔄 Làm tươi"):
         st.cache_resource.clear()
         st.rerun()
 
@@ -109,7 +117,7 @@ with st.form("form_nhap", clear_on_submit=True):
     input_dv = c3.selectbox("Đơn vị", st.session_state.ds_donvi)
     input_tien = c3.number_input("Phí (VNĐ)", min_value=0, step=1000)
 
-    submit = st.form_submit_button("💾 Lưu thông tin")
+    submit = st.form_submit_button("💾 Lưu")
 
     if submit:
         wks, err = ket_noi_sheet()
@@ -180,19 +188,12 @@ df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang_chon]
 
 
 # =========================
-# TỔNG TIỀN
+# HIỂN THỊ DỮ LIỆU
 # =========================
+st.subheader("📦 Danh sách giao dịch")
+
 tong = int(df_f["Phí (VNĐ)"].sum())
 
-col1, col2 = st.columns([3, 1])
-col1.subheader(f"📋 Dữ liệu tháng {thang_chon}")
-col2.metric("💰 Tổng cộng", f"{tong:,.0f} VNĐ")
-
-
-# =========================
-# HIỂN THỊ + XOÁ
-# =========================
-st.subheader("🧾 Chi tiết giao dịch")
 
 for i, row in df_f.iterrows():
 
@@ -203,16 +204,23 @@ for i, row in df_f.iterrows():
     c3.write(row["Đơn vị"])
     c4.write(f"{row['Phí (VNĐ)']:,} VNĐ")
 
-    if c5.button("🗑", key=f"del_{i}"):
+    if c5.button("❌", key=f"del_{i}"):
 
         wks.delete_rows(i + 2)
-        st.success("Đã xoá")
         st.cache_resource.clear()
         st.rerun()
 
 
 # =========================
-# FULL TABLE (OPTIONAL VIEW)
+# TỔNG CỘNG (CUỐI BẢNG - TÔ MÀU + IN ĐẬM)
 # =========================
-with st.expander("📊 Xem toàn bộ dữ liệu"):
-    st.dataframe(df_f, use_container_width=True, hide_index=True)
+st.markdown("---")
+
+st.markdown(
+    f"""
+    <div class="total-box">
+        💰 TỔNG CỘNG THÁNG {thang_chon}: {tong:,.0f} VNĐ
+    </div>
+    """,
+    unsafe_allow_html=True
+)
