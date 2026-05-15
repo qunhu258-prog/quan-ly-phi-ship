@@ -5,30 +5,36 @@ import gspread
 
 st.set_page_config(page_title="Quản lý Phí Giao Hàng", layout="wide")
 
+# --- KẾT NỐI ---
 def get_conn():
     try:
-        # Lấy thông tin bảo mật từ Streamlit Secrets
         s = st.secrets
+        # Kiểm tra xem có đủ các thông tin cần thiết không
+        required_keys = ["project_id", "private_key", "client_email"]
+        for key in required_keys:
+            if key not in s:
+                return None, f"Thiếu thông tin {key} trong Secrets"
+
         creds = {
-            "type": s["type"],
+            "type": s.get("type", "service_account"),
             "project_id": s["project_id"],
-            "private_key_id": s["private_key_id"],
+            "private_key_id": s.get("private_key_id", ""),
             "private_key": s["private_key"].replace("\\n", "\n"),
             "client_email": s["client_email"],
-            "client_id": s["client_id"],
-            "auth_uri": s["auth_uri"],
-            "token_uri": s["token_uri"],
-            "auth_provider_x509_cert_url": s["auth_provider_x509_cert_url"],
-            "client_x509_cert_url": s["client_x509_cert_url"]
+            "client_id": s.get("client_id", ""),
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+            "client_x509_cert_url": s.get("client_x509_cert_url", "")
         }
         gc = gspread.service_account_from_dict(creds)
-        # Mở bằng ID file Sheets của bạn
+        # ID file của Như: 1pX1uImwD770upHdJ4OKNzYxwKxd5qVeI2zQeW0SBLUg
         sh = gc.open_by_key("1pX1uImwD770upHdJ4OKNzYxwKxd5qVeI2zQeW0SBLUg")
         return sh.get_worksheet(0), None
     except Exception as e:
         return None, str(e)
 
-# --- QUẢN LÝ DANH SÁCH ĐƠN VỊ ---
+# --- SIDEBAR QUẢN LÝ ĐƠN VỊ ---
 if 'ds_donvi' not in st.session_state:
     st.session_state.ds_donvi = ["Ahamove 🛵", "Grab 🚗", "Lalamove 🚛", "GHTK 📦"]
 
@@ -38,66 +44,68 @@ with st.sidebar:
     if st.button("Thêm"):
         if moi and moi not in st.session_state.ds_donvi:
             st.session_state.ds_donvi.append(moi)
+            st.success(f"Đã thêm {moi}")
             st.rerun()
 
-# --- GIAO DIỆN CHÍNH ---
+# --- GIAO DIỆN NHẬP LIỆU ---
 st.title("🚚 Quản Lý Chi Phí Giao Hàng")
 
 with st.form("nhap_lieu", clear_on_submit=True):
     c1, c2, c3 = st.columns([1, 2, 1])
     ng = c1.date_input("Ngày tháng năm", datetime.now())
-    nd = c2.text_input("Nội dung (Giao hàng cho ai/cái gì...)")
+    nd = c2.text_input("Nội dung (Ví dụ: Giao máy bơm cho khách A)")
     dv = c3.selectbox("Đơn vị vận chuyển", st.session_state.ds_donvi)
-    t = c3.number_input("Phí vận chuyển (VNĐ)", min_value=0, step=1000)
+    t = c3.number_input("Phí (VNĐ)", min_value=0, step=1000)
     
-    submit = st.form_submit_button("💾 Lưu thông tin")
-    
-    if submit:
+    if st.form_submit_button("💾 Lưu thông tin"):
         if not nd:
-            st.warning("Như ơi, nhập thêm nội dung nhé!")
+            st.error("Như chưa nhập nội dung kìa!")
         else:
             ws, err = get_conn()
             if ws:
-                # Lưu dữ liệu xuống Sheets
+                # Ghi vào Sheets: Ngày, Nội dung, Đơn vị, Phí
                 ws.append_row([ng.strftime('%d/%m/%Y'), nd, dv, t])
-                st.success("Đã lưu thành công! ✅")
+                st.success("Đã lưu vào Sheets thành công! ✅")
                 st.balloons()
             else:
                 st.error(f"Lỗi kết nối: {err}")
 
 st.write("---")
 
-# --- HIỂN THỊ DỮ LIỆU & BỘ LỌC ---
+# --- HIỂN THỊ DỮ LIỆU ---
 ws, err = get_conn()
 if ws:
     try:
-        data = ws.get_all_records()
-        if data:
-            df = pd.DataFrame(data)
+        # Lấy toàn bộ dữ liệu
+        data = ws.get_all_values()
+        if len(data) > 1: # Có dữ liệu (trừ hàng tiêu đề)
+            df = pd.DataFrame(data[1:], columns=data[0])
             
-            # Tính tổng cộng
-            tong_phi = df['Phí'].sum()
+            # Chuyển cột Phí sang dạng số để tính tổng
+            df['Phí (VNĐ)'] = pd.to_numeric(df['Phí (VNĐ)'], errors='coerce').fillna(0)
             
-            col_t1, col_t2 = st.columns([3, 1])
-            with col_t1:
-                st.subheader("📋 Danh sách đã book")
-            with col_t2:
-                st.metric("Tổng cộng", f"{tong_phi:,} VNĐ")
+            # Bộ lọc theo tháng
+            df['Ngày'] = pd.to_datetime(df['Ngày'], format='%d/%m/%Y', errors='coerce')
+            thang_chon = st.selectbox("Chọn tháng để xem", 
+                                     options=sorted(df['Ngày'].dt.strftime('%m/%Y').unique(), reverse=True))
             
-            # Hiển thị bảng (đưa đơn hàng mới nhất lên đầu)
-            st.dataframe(df.iloc[::-1], use_container_width=True, hide_index=True)
+            df_filtered = df[df['Ngày'].dt.strftime('%m/%Y') == thang_chon]
             
-            # Nút xuất file để Như in báo cáo
-            csv = df.to_csv(index=False).encode('utf-8-sig')
-            st.download_button(
-                label="📥 Xuất file Excel (CSV) để in",
-                data=csv,
-                file_name=f'phi_vanchuyen_{datetime.now().strftime("%m_%Y")}.csv',
-                mime='text/csv',
-            )
+            # Tính tổng
+            tong = df_filtered['Phí (VNĐ)'].sum()
+            
+            c_a, c_b = st.columns([3, 1])
+            c_a.subheader(f"📋 Danh sách tháng {thang_chon}")
+            c_b.metric("Tổng chi phí", f"{tong:,.0f} VNĐ")
+            
+            st.dataframe(df_filtered, use_container_width=True, hide_index=True)
+            
+            # Xuất file
+            csv = df_filtered.to_csv(index=False).encode('utf-8-sig')
+            st.download_button("📥 Tải file báo cáo tháng này", csv, f"bao_cao_{thang_chon}.csv", "text/csv")
         else:
-            st.info("Chưa có dữ liệu. Như hãy nhập đơn hàng đầu tiên nhé!")
+            st.info("Chưa có dữ liệu nào được lưu.")
     except Exception as e:
-        st.warning("Không đọc được dữ liệu. Như hãy kiểm tra hàng 1 của file Sheets có đúng 4 cột: Ngày, Nội dung, Đơn vị, Phí không nhé.")
+        st.error(f"Lỗi hiển thị bảng: {e}")
 else:
-    st.error("Không thể kết nối với dữ liệu. Hãy kiểm tra lại phần Secrets hoặc quyền chia sẻ file Sheets.")
+    st.error(f"Kết nối thất bại. Lỗi từ hệ thống: {err}")
