@@ -217,36 +217,46 @@ df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang]
 # HEADER
 # =========================
 st.markdown("""
-<div class="header-row">
-    <div class="c1">STT</div>
-    <div class="c2">Ngày</div>
-    <div class="c3">Nội dung</div>
-    <div class="c4">ĐVVC</div>
-    <div class="c5">Phí</div>
-    <div class="c6">Xoá</div>
-</div>
+<style>
+    .row-style {
+        font-size: 14px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: flex;
+        align-items: center;
+    }
+</style>
 """, unsafe_allow_html=True)
 
+# 2. Header
+h1, h2, h3, h4, h5, h6 = st.columns([1, 2.5, 7, 3, 3, 1.5])
+h1.write("**STT**")
+h2.write("**Ngày**")
+h3.write("**Nội dung**")
+h4.write("**ĐVVC**")
+h5.write("**Phí**")
+h6.write("**Xóa**")
 
-# =========================
-# ROWS
-# =========================
+# 3. Danh sách dòng dữ liệu
 for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
-
     ngay_txt = row["Ngày"].strftime("%d/%m/%Y") if not pd.isna(row["Ngày"]) else ""
-
-
-    c1.markdown(f"<div class='row c1'>{idx}</div>", unsafe_allow_html=True)
-    c2.markdown(f"<div class='row c2'>{ngay_txt}</div>", unsafe_allow_html=True)
-    c3.markdown(f"<div class='row c3'>{row['Nội dung']}</div>", unsafe_allow_html=True)
-    c4.markdown(f"<div class='row c4'>{row['Đơn vị']}</div>", unsafe_allow_html=True)
-    c5.markdown(f"<div class='row c5'><b>{row['Phí (VNĐ)']:,}</b></div>", unsafe_allow_html=True)
-
-    if c6.button("Xoá", key=f"del_{i}"):
+    
+    # Tỷ lệ cột tối ưu cho màn hình ngang
+    c1, c2, c3, c4, c5, c6 = st.columns([1, 2.5, 7, 3, 3, 1.5])
+    
+    c1.markdown(f"<div class='row-style'>{idx}</div>", unsafe_allow_html=True)
+    c2.markdown(f"<div class='row-style'>{ngay_txt}</div>", unsafe_allow_html=True)
+    # Cột Nội dung có tooltip khi rê chuột vào (title)
+    c3.markdown(f"<div class='row-style' title='{row['Nội dung']}'>{row['Nội dung']}</div>", unsafe_allow_html=True)
+    c4.markdown(f"<div class='row-style'>{row['Đơn vị']}</div>", unsafe_allow_html=True)
+    c5.markdown(f"<div class='row-style'><b>{row['Phí (VNĐ)']:,}</b></div>", unsafe_allow_html=True)
+    
+    # Nút xóa dùng icon để tiết kiệm diện tích
+    if c6.button("🗑️", key=f"del_{i}"):
         ws.delete_rows(i + 2)
         st.cache_resource.clear()
-        st.rerun()
-# =========================
+        st.rerun()# =========================
 # TOTAL
 # =========================
 tong = int(df_f["Phí (VNĐ)"].sum())
