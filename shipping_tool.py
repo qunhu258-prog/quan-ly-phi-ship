@@ -24,17 +24,24 @@ def get_conn():
             "client_x509_cert_url": s["client_x509_cert_url"]
         }
 
+        st.write("✅ Đã đọc secrets")
+
         gc = gspread.service_account_from_dict(creds_dict)
 
-        # ID GOOGLE SHEET
+        st.write("✅ Đã xác thực Google")
+
         sh = gc.open_by_key("1pX1uImwD770upHdJ4OKNzYxwKxd5qVeI2zQeW0SBLUg")
 
+        st.write("✅ Đã mở Google Sheet")
+
         ws = sh.sheet1
+
+        st.write("✅ Đã kết nối worksheet")
 
         return ws
 
     except Exception as e:
-        st.error(f"Lỗi kết nối Google Sheets: {e}")
+        st.exception(e)
         return None
 
 
