@@ -218,38 +218,43 @@ df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang]
 # =========================
 st.markdown("""
 <style>
-    /* Xóa khoảng cách giữa các cột trong Streamlit */
-    [data-testid="column"] {
-        padding: 0px !important;
-        margin: 0px !important;
-    }
-    /* Đảm bảo các hộp màu xanh sát nhau */
     .header-col {
         background-color: #1f77b4;
-        padding: 10px 5px; /* Giảm padding ngang để chữ không sát lề */
+        padding: 10px;
         color: white;
         font-weight: bold;
-        text-align: center; /* Căn giữa cho đẹp */
-        margin: 0px; 
-        border-right: 0.5px solid #155a8a; /* Thêm đường kẻ mờ phân tách nhẹ nếu muốn */
+        text-align: left;
+        border-radius: 4px;
+        margin-bottom: 5px;
     }
-    /* Bo góc chỉ cho cột đầu và cột cuối của dải màu */
-    .header-left { border-radius: 8px 0 0 8px; }
-    .header-right { border-radius: 0 8px 8px 0; border-right: none; }
 </style>
 """, unsafe_allow_html=True)
 
-# 2. Hiển thị Header
+# 2. Tạo Header bằng cách đổ màu trực tiếp vào từng cột
 h1, h2, h3, h4, h5, h6 = st.columns([1, 2.5, 7, 3, 3, 1.5])
 
-h1.markdown('<div class="header-col header-left">STT</div>', unsafe_allow_html=True)
+h1.markdown('<div class="header-col">STT</div>', unsafe_allow_html=True)
 h2.markdown('<div class="header-col">Ngày</div>', unsafe_allow_html=True)
 h3.markdown('<div class="header-col">Nội dung</div>', unsafe_allow_html=True)
 h4.markdown('<div class="header-col">ĐVVC</div>', unsafe_allow_html=True)
 h5.markdown('<div class="header-col">Phí</div>', unsafe_allow_html=True)
-h6.markdown('<div class="header-col header-right">Xóa</div>', unsafe_allow_html=True)
+h6.markdown('<div class="header-col">Xóa</div>', unsafe_allow_html=True)
 
-# --- Dữ liệu bên dưới giữ nguyên tỷ lệ cột ---
+# 3. Phần vòng lặp dữ liệu bên dưới (Như giữ nguyên tỷ lệ cột để khớp hàng)
+for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
+    ngay_txt = row["Ngày"].strftime("%d/%m/%Y") if not pd.isna(row["Ngày"]) else ""
+    c1, c2, c3, c4, c5, c6 = st.columns([1, 2.5, 7, 3, 3, 1.5])
+    
+    c1.markdown(f"<div class='row-style'>{idx}</div>", unsafe_allow_html=True)
+    c2.markdown(f"<div class='row-style'>{ngay_txt}</div>", unsafe_allow_html=True)
+    c3.markdown(f"<div class='row-style' title='{row['Nội dung']}'>{row['Nội dung']}</div>", unsafe_allow_html=True)
+    c4.markdown(f"<div class='row-style'>{row['Đơn vị']}</div>", unsafe_allow_html=True)
+    c5.markdown(f"<div class='row-style'><b>{row['Phí (VNĐ)']:,}</b></div>", unsafe_allow_html=True)
+    
+    if c6.button("❌", key=f"del_{i}"):
+        ws.delete_rows(i + 2)
+        st.cache_resource.clear()
+        st.rerun()
 # =========================
 # TOTAL
 # =========================
