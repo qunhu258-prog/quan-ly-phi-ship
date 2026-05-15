@@ -93,7 +93,7 @@ with st.sidebar:
         <hr style="margin: 10px 0; border: 0.5px solid #ddd;">
         <p style="margin:0; font-size: 14px; color: #555;">🌤️ <b>Thời tiết:</b></p>
         <p style="margin:0; font-size: 16px; font-weight: bold;">{thoi_tiet}</p>
-        <p style="margin-top:8px; font-size: 15px; color: #1f77b4; font-weight: bold;">
+        <p style="margin-top:8px; font-size: 16px; font-weight: bold;">
             Vui vẻ lên nhé ✨🐻
         </p>
     </div>
