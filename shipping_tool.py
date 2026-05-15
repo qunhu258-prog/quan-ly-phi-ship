@@ -235,7 +235,7 @@ for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
 
     ngay_txt = row["Ngày"].strftime("%d/%m/%Y") if not pd.isna(row["Ngày"]) else ""
 
-    c1, c2, c3, c4, c5, c6 = st.columns([0.6, 1.4, 4, 2, 1.5, 0.8])
+    c1, c2, c3, c4, c5, c6 = st.columns([2, 3.5, 10, 4, 3, 0.8])
 
     c1.markdown(f"<div class='row c1'>{idx}</div>", unsafe_allow_html=True)
     c2.markdown(f"<div class='row c2'>{ngay_txt}</div>", unsafe_allow_html=True)
