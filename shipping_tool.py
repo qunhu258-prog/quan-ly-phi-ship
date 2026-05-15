@@ -6,9 +6,68 @@ from datetime import datetime
 from google.oauth2.service_account import Credentials
 
 # =========================
-# FULL WIDTH LAYOUT
+# FULL WIDTH
 # =========================
 st.set_page_config(layout="wide")
+
+# =========================
+# STYLE PRO TABLE
+# =========================
+st.markdown("""
+<style>
+
+/* FULL WIDTH */
+.block-container {
+    padding: 2rem 3rem;
+    max-width: 100%;
+}
+
+/* HEADER STICKY */
+.header-row {
+    display: flex;
+    font-weight: bold;
+    background: #111827;
+    color: white;
+    padding: 12px 8px;
+    border-radius: 10px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+/* ROW */
+.row {
+    display: flex;
+    padding: 12px 8px;
+    border-bottom: 1px solid #eee;
+    transition: 0.2s;
+}
+
+/* HOVER EFFECT */
+.row:hover {
+    background: #f3f6ff;
+    transform: scale(1.002);
+}
+
+/* COL WIDTH */
+.col-stt { width: 6%; }
+.col-date { width: 14%; }
+.col-content { width: 40%; }
+.col-unit { width: 18%; }
+.col-money { width: 15%; }
+.col-action { width: 7%; }
+
+/* DELETE BUTTON */
+.delete-btn button {
+    background: #ff4b4b;
+    color: white;
+    border-radius: 8px;
+    border: none;
+    padding: 4px 8px;
+}
+</style>
+""", unsafe_allow_html=True)
+
 
 # =========================
 # CONFIG
@@ -52,79 +111,9 @@ ws = ket_noi_sheet()
 
 
 # =========================
-# FULL WIDTH CSS
-# =========================
-st.markdown("""
-<style>
-.block-container {
-    padding-left: 3rem;
-    padding-right: 3rem;
-    max-width: 100%;
-}
-
-h1 {
-    font-size: 40px !important;
-}
-
-.total-box {
-    background: #fff3cd;
-    padding: 12px;
-    border-radius: 12px;
-    font-weight: bold;
-    margin-top: 10px;
-}
-</style>
-""", unsafe_allow_html=True)
-
-
-# =========================
 # TITLE
 # =========================
 st.title("🚚 CHI PHÍ GIAO HÀNG")
-
-
-# =========================
-# SESSION STATE
-# =========================
-if "ds_donvi" not in st.session_state:
-    st.session_state.ds_donvi = ["Ahamove 🛵", "Grab 🚗", "Lalamove 🚛", "GHTK 📦"]
-
-
-# =========================
-# SIDEBAR
-# =========================
-with st.sidebar:
-    st.header("⚙️ Cài đặt")
-
-    moi = st.text_input("Thêm đơn vị")
-
-    if st.button("➕ Thêm"):
-        if moi and moi not in st.session_state.ds_donvi:
-            st.session_state.ds_donvi.append(moi)
-            st.rerun()
-
-    if st.button("🔄 Làm tươi"):
-        st.cache_resource.clear()
-        st.rerun()
-
-
-# =========================
-# FORM NHẬP
-# =========================
-with st.form("form_nhap", clear_on_submit=True):
-
-    c1, c2, c3 = st.columns([1, 3, 1])
-
-    ngay = c1.date_input("Ngày", datetime.now())
-    nd = c2.text_input("Nội dung")
-    dv = c3.selectbox("Đơn vị", st.session_state.ds_donvi)
-    tien = c3.number_input("Phí (VNĐ)", min_value=0, step=1000)
-
-    if st.form_submit_button("💾 Lưu"):
-        ws.append_row([ngay.strftime("%d/%m/%Y"), nd, dv, int(tien)])
-        st.success("Đã lưu")
-        st.cache_resource.clear()
-        st.rerun()
 
 
 # =========================
@@ -147,54 +136,82 @@ def clean_money(x):
 
 
 df["Phí (VNĐ)"] = df["Phí (VNĐ)"].apply(clean_money)
+df["Ngày"] = pd.to_datetime(df["Ngày"], format="%d/%m/%Y", errors="coerce")
 
 
 # =========================
 # FILTER MONTH
 # =========================
-df["Ngày"] = pd.to_datetime(df["Ngày"], format="%d/%m/%Y", errors="coerce")
-
 months = sorted(df["Ngày"].dt.strftime("%m/%Y").dropna().unique(), reverse=True)
-
 thang = st.selectbox("📅 Chọn tháng", months)
 
 df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang]
 
 
 # =========================
-# TABLE CUSTOM (STT = 1)
+# TOTAL
 # =========================
-st.subheader("Chi tiết giao dịch")
-
 tong = int(df_f["Phí (VNĐ)"].sum())
 
+col1, col2, col3 = st.columns(3)
+col1.metric("📦 Số đơn", len(df_f))
+col2.metric("💰 Tổng chi", f"{tong:,.0f} VNĐ")
+col3.metric("🚚 TB / đơn", f"{tong/max(len(df_f),1):,.0f} VNĐ")
 
-for idx, (_, row) in enumerate(df_f.iterrows(), start=1):
 
-    c1, c2, c3, c4, c5 = st.columns([0.5, 3, 2, 2, 1])
+st.write("---")
 
-    c1.write(idx)  # ⭐ STT bắt đầu từ 1
-    c2.write(row["Nội dung"])
-    c3.write(row["Đơn vị"])
-    c4.write(f"{row['Phí (VNĐ)']:,} VNĐ")
 
-    if c5.button("❌", key=f"del_{idx}"):
+# =========================
+# HEADER TABLE
+# =========================
+st.markdown("""
+<div class="header-row">
+    <div class="col-stt">STT</div>
+    <div class="col-date">Ngày</div>
+    <div class="col-content">Nội dung</div>
+    <div class="col-unit">ĐVVC</div>
+    <div class="col-money">Phí</div>
+    <div class="col-action">Xoá</div>
+</div>
+""", unsafe_allow_html=True)
 
-        ws.delete_rows(df_f.index[idx-1] + 2)
+
+# =========================
+# ROWS
+# =========================
+for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
+
+    ngay = row["Ngày"].strftime("%d/%m/%Y") if not pd.isna(row["Ngày"]) else ""
+
+    c1, c2, c3, c4, c5, c6 = st.columns([0.6, 1.4, 4, 2, 1.5, 0.8])
+
+    c1.markdown(f"<div class='row'>{idx}</div>", unsafe_allow_html=True)
+    c2.markdown(f"<div class='row'>{ngay}</div>", unsafe_allow_html=True)
+    c3.markdown(f"<div class='row'>{row['Nội dung']}</div>", unsafe_allow_html=True)
+    c4.markdown(f"<div class='row'>{row['Đơn vị']}</div>", unsafe_allow_html=True)
+    c5.markdown(f"<div class='row'><b>{row['Phí (VNĐ)']:,} VNĐ</b></div>", unsafe_allow_html=True)
+
+    if c6.button("❌", key=f"del_{i}"):
+        ws.delete_rows(i + 2)
         st.cache_resource.clear()
         st.rerun()
 
 
 # =========================
-# TOTAL AT BOTTOM
+# TOTAL BOTTOM
 # =========================
 st.markdown("---")
 
-st.markdown(
-    f"""
-    <div class="total-box">
-        💰 TỔNG CỘNG THÁNG {thang}: {tong:,.0f} VNĐ
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+st.markdown(f"""
+<div style="
+    padding:18px;
+    border-radius:14px;
+    font-size:22px;
+    font-weight:bold;
+    text-align:center;
+    background: linear-gradient(90deg,#ffeaa7,#fab1a0);
+">
+💰 TỔNG CỘNG THÁNG {thang}: {tong:,.0f} VNĐ
+</div>
+""", unsafe_allow_html=True)
