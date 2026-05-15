@@ -250,9 +250,6 @@ h5.markdown('<div class="header-col">Phí</div>', unsafe_allow_html=True)
 h6.markdown('<div class="header-col header-right">Xóa</div>', unsafe_allow_html=True)
 
 # --- Dữ liệu bên dưới giữ nguyên tỷ lệ cột ---
-        
-        # Thêm đường kẻ ngang mờ giữa các dòng
-        st.markdown('<hr style="margin: 0; border: 0.5px solid #f0f2f6;">', unsafe_allow_html=True)
 # =========================
 # TOTAL
 # =========================
