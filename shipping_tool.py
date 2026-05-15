@@ -231,24 +231,20 @@ st.markdown("""
 # =========================
 # ROWS
 # =========================
-st.subheader("📦 Chi tiết giao dịch")
+for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
 
-tong = int(df_f["Phí (VNĐ)"].sum())
+    ngay_txt = row["Ngày"].strftime("%d/%m/%Y") if not pd.isna(row["Ngày"]) else ""
 
+    c1, c2, c3, c4, c5, c6 = st.columns([0.6, 1.4, 4, 2, 1.5, 0.8])
 
-for idx, (_, row) in enumerate(df_f.iterrows(), start=1):
+    c1.markdown(f"<div class='row c1'>{idx}</div>", unsafe_allow_html=True)
+    c2.markdown(f"<div class='row c2'>{ngay_txt}</div>", unsafe_allow_html=True)
+    c3.markdown(f"<div class='row c3'>{row['Nội dung']}</div>", unsafe_allow_html=True)
+    c4.markdown(f"<div class='row c4'>{row['Đơn vị']}</div>", unsafe_allow_html=True)
+    c5.markdown(f"<div class='row c5'><b>{row['Phí (VNĐ)']:,}</b></div>", unsafe_allow_html=True)
 
-    c1, c2, c3, c4, c5, c6 = st.columns([0.5, 3, 2, 2, 1,1])
-
-    c1.write(idx)  # ⭐ STT bắt đầu từ 1
-    c2.write(row["Ngày"])
-    c3.write(row["Nội dung"])
-    c4.write(row["Đơn vị"])
-    c5.write(f"{row['Phí (VNĐ)']:,} VNĐ")
-
-    if c6.button("❌", key=f"del_{idx}"):
-
-        ws.delete_rows(df_f.index[idx-1] + 2)
+    if c6.button("Xoá", key=f"del_{i}"):
+        ws.delete_rows(i + 2)
         st.cache_resource.clear()
         st.rerun()
 # =========================
