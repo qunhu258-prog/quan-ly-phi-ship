@@ -1,5 +1,4 @@
-﻿```python
-import streamlit as st
+﻿import streamlit as st
 import gspread
 import pandas as pd
 from datetime import datetime
@@ -212,4 +211,3 @@ try:
 
 except Exception as e:
     st.error(f"Lỗi hiển thị dữ liệu: {e}")
-```
