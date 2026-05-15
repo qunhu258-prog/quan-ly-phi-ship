@@ -238,14 +238,15 @@ tong = int(df_f["Phí (VNĐ)"].sum())
 
 for idx, (_, row) in enumerate(df_f.iterrows(), start=1):
 
-    c1, c2, c3, c4, c5 = st.columns([0.5, 3, 2, 2, 1])
+    c1, c2, c3, c4, c5, c6 = st.columns([0.5, 3, 2, 2, 1,1])
 
     c1.write(idx)  # ⭐ STT bắt đầu từ 1
-    c2.write(row["Nội dung"])
-    c3.write(row["Đơn vị"])
-    c4.write(f"{row['Phí (VNĐ)']:,} VNĐ")
+    c2.write(row["Ngày"])
+    c3.write(row["Nội dung"])
+    c4.write(row["Đơn vị"])
+    c5.write(f"{row['Phí (VNĐ)']:,} VNĐ")
 
-    if c5.button("❌", key=f"del_{idx}"):
+    if c6.button("❌", key=f"del_{idx}"):
 
         ws.delete_rows(df_f.index[idx-1] + 2)
         st.cache_resource.clear()
