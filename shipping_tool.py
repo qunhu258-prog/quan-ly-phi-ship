@@ -21,8 +21,7 @@ ngay_hien_tai = f"{thu}, ngày {now.strftime('%d/%m/%Y')}"
 
 gio = now.hour
 if 6 <= gio < 17:
-    thoi_tiet = "Trời đang nắng đẹp ☀️
-		 Vui vẻ lên nhé 🐻"
+    thoi_tiet = "Trời đang nắng đẹp ☀️"
 elif 17 <= gio < 19:
     thoi_tiet = "Hoàng hôn lãng mạn 🌇"
 else:
@@ -87,8 +86,19 @@ ws = ket_noi_sheet()
 # 5. SIDEBAR GIAO DIỆN
 # =========================
 with st.sidebar:
-    st.markdown(f'<div class="taskbar-box"><p style="margin:0; font-size: 14px;">📅 <b>Hôm nay:</b></p><p style="margin:0; font-size: 16px; font-weight: bold;">{ngay_hien_tai}</p><hr style="margin: 10px 0;"><p style="margin:0; font-size: 14px;">🌤️ <b>Thời tiết:</b></p><p style="margin:0; font-size: 16px;">{thoi_tiet}</p></div>', unsafe_allow_html=True)
-    st.header("⚙️ Đơn vị vận chuyển")
+    st.markdown(f'''
+    <div class="taskbar-box">
+        <p style="margin:0; font-size: 14px; color: #555;">📅 <b>Hôm nay:</b></p>
+        <p style="margin:0; font-size: 16px; font-weight: bold;">{ngay_hien_tai}</p>
+        <hr style="margin: 10px 0; border: 0.5px solid #ddd;">
+        <p style="margin:0; font-size: 14px; color: #555;">🌤️ <b>Thời tiết:</b></p>
+        <p style="margin:0; font-size: 16px; font-weight: bold;">{thoi_tiet}</p>
+        <p style="margin-top:8px; font-size: 15px; color: #1f77b4; font-weight: bold;">
+            Vui vẻ lên nhé ✨🐻
+        </p>
+    </div>
+    ''', unsafe_allow_html=True)
+    st.header("⚙️ Cài dặt")
     if "ds_donvi" not in st.session_state:
         st.session_state.ds_donvi = ["Ahamove 🛵", "Grab 🚗", "Lalamove 🚛", "GHTK 📦"]
     new = st.text_input("Thêm đơn vị")
