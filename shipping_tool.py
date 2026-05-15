@@ -8,27 +8,26 @@ st.set_page_config(page_title="Quản lý Phí Giao Hàng", layout="wide")
 # --- KẾT NỐI ---
 def get_conn():
     try:
+        # Lấy trực tiếp từ Secrets (đã sửa ở Bước 1)
         s = st.secrets
-        # Kiểm tra xem có đủ các thông tin cần thiết không
-        required_keys = ["project_id", "private_key", "client_email"]
-        for key in required_keys:
-            if key not in s:
-                return None, f"Thiếu thông tin {key} trong Secrets"
-
-        creds = {
-            "type": s.get("type", "service_account"),
+        
+        # Tạo từ điển thông tin xác thực
+        creds_dict = {
+            "type": s["type"],
             "project_id": s["project_id"],
-            "private_key_id": s.get("private_key_id", ""),
-            "private_key": s["private_key"].replace("\\n", "\n"),
+            "private_key_id": s["private_key_id"],
+            "private_key": s["private_key"].replace("\\n", "\n") if "\\n" in s["private_key"] else s["private_key"],
             "client_email": s["client_email"],
-            "client_id": s.get("client_id", ""),
+            "client_id": s["client_id"],
             "auth_uri": "https://accounts.google.com/o/oauth2/auth",
             "token_uri": "https://oauth2.googleapis.com/token",
             "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-            "client_x509_cert_url": s.get("client_x509_cert_url", "")
+            "client_x509_cert_url": s["client_x509_cert_url"]
         }
-        gc = gspread.service_account_from_dict(creds)
-        # ID file của Như: 1pX1uImwD770upHdJ4OKNzYxwKxd5qVeI2zQeW0SBLUg
+        
+        # Kết nối
+        gc = gspread.service_account_from_dict(creds_dict)
+        # Sử dụng ID file của Như
         sh = gc.open_by_key("1pX1uImwD770upHdJ4OKNzYxwKxd5qVeI2zQeW0SBLUg")
         return sh.get_worksheet(0), None
     except Exception as e:
