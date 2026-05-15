@@ -98,7 +98,7 @@ with st.sidebar:
         </p>
     </div>
     ''', unsafe_allow_html=True)
-    st.header("⚙️ Cài dặt")
+    st.header("⚙️ Cài đặt")
     if "ds_donvi" not in st.session_state:
         st.session_state.ds_donvi = ["Ahamove 🛵", "Grab 🚗", "Lalamove 🚛", "GHTK 📦"]
     new = st.text_input("Thêm đơn vị")
