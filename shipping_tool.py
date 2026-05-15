@@ -28,42 +28,51 @@ else:
     thoi_tiet = "Trời đêm mát mẻ ✨"
 
 # =========================
-# 3. STYLE CSS TỔNG HỢP
+# 3. STYLE CSS TỔNG HỢP (MÀU CHỦ ĐẠO #5B7E3C)
 # =========================
 st.markdown("""
 <style>
     .block-container { padding: 2rem 3rem; max-width: 100%; }
+    
+    /* Taskbar sidebar */
     .taskbar-box {
-        background-color: #f0f2f6; padding: 15px; border-radius: 10px; 
-        border-left: 5px solid #1f77b4; margin-bottom: 20px;
+        background-color: #f1f4ef; padding: 15px; border-radius: 10px; 
+        border-left: 5px solid #5B7E3C; margin-bottom: 20px;
     }
+    
+    /* Header bảng */
     div[data-testid="stHorizontalBlock"]:has(.header-col) { gap: 0px !important; }
     .header-col {
-        background-color: #1f77b4; color: white; font-weight: bold;
+        background-color: #5B7E3C; color: white; font-weight: bold;
         font-size: 18px; padding: 12px 5px; text-align: center;
         border-right: 0.1px solid #ffffff33;
     }
     .header-left { border-radius: 8px 0 0 0; }
     .header-right { border-radius: 0 8px 0 0; border-right: none; }
+    
+    /* Nội dung dòng */
     .row-style {
         font-size: 18px; padding: 10px 0; display: flex;
         align-items: center; justify-content: center;
     }
-    [data-testid="column"]:last-child {
-        display: flex; justify-content: center; align-items: center;
-    }
     
-    /* TOTAL BOX - Đã sửa sang màu xanh đồng bộ Header */
+    /* Tổng cộng tháng */
     .total-box {
-        padding: 18px; 
-        border-radius: 15px; 
-        font-size: 22px;
-        font-weight: bold; 
-        text-align: center;
-        background-color: #1f77b4; /* Màu xanh đồng bộ */
-        color: white; /* Chữ trắng */
-        box-shadow: 0 4px 15px rgba(31, 119, 180, 0.3); /* Bóng đổ xanh nhẹ */
+        padding: 18px; border-radius: 15px; font-size: 22px;
+        font-weight: bold; text-align: center;
+        background-color: #5B7E3C; color: white;
+        box-shadow: 0 4px 15px rgba(91, 126, 60, 0.3);
         margin-top: 20px;
+    }
+
+    /* Đổi màu các nút bấm Streamlit mặc định sang xanh lá cho đồng bộ */
+    button[kind="primary"], .stButton > button {
+        border-color: #5B7E3C !important;
+        color: #5B7E3C !important;
+    }
+    .stButton > button:hover {
+        background-color: #5B7E3C !important;
+        color: white !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -101,30 +110,43 @@ with st.sidebar:
         <hr style="margin: 10px 0; border: 0.5px solid #ddd;">
         <p style="margin:0; font-size: 14px; color: #555;">🌤️ <b>Thời tiết:</b></p>
         <p style="margin:0; font-size: 16px; font-weight: bold;">{thoi_tiet}</p>
-        <p style="margin-top:8px; font-size: 16px; font-weight: bold;">
+        <p style="margin-top:8px; font-size: 16px; font-weight: bold; color: #5B7E3C;">
             Vui vẻ lên nhé ✨🐻
         </p>
     </div>
     ''', unsafe_allow_html=True)
+
     st.header("⚙️ Cài đặt")
+    
+    data_all = ws.get_all_values()
+    if len(data_all) > 1:
+        df_all = pd.DataFrame(data_all[1:], columns=data_all[0])
+        list_tu_sheet = df_all['Đơn vị'].unique().tolist()
+    else:
+        list_tu_sheet = []
+
+    mac_dinh = ["Ahamove 🛵", "Grab 🚗", "Lalamove 🚛", "GHTK 📦"]
     if "ds_donvi" not in st.session_state:
-        st.session_state.ds_donvi = ["Ahamove 🛵", "Grab 🚗", "Lalamove 🚛", "GHTK 📦"]
-    new = st.text_input("Thêm đơn vị")
+        st.session_state.ds_donvi = list(set(mac_dinh + list_tu_sheet))
+
+    new = st.text_input("Thêm đơn vị mới")
     if st.button("➕ Thêm"):
         if new and new not in st.session_state.ds_donvi:
             st.session_state.ds_donvi.append(new)
             st.rerun()
+
     if st.session_state.ds_donvi:
-        del_unit = st.selectbox("Xóa đơn vị", st.session_state.ds_donvi)
+        del_unit = st.selectbox("Xóa đơn vị khỏi danh sách chọn", st.session_state.ds_donvi)
         if st.button("🗑 Xóa"):
             st.session_state.ds_donvi.remove(del_unit)
             st.rerun()
+
     if st.button("🔄 Làm tươi"):
         st.cache_resource.clear()
         st.rerun()
 
 # =========================
-# 6. NHẬP LIỆU & XỬ LÝ DỮ LIỆU
+# 6. NHẬP LIỆU & XỬ LÝ
 # =========================
 st.title("🚚 CHI PHÍ GIAO HÀNG")
 with st.form("form_nhap", clear_on_submit=True):
@@ -133,7 +155,7 @@ with st.form("form_nhap", clear_on_submit=True):
     nd = c2.text_input("Nội dung")
     dv = c3.selectbox("Đơn vị", st.session_state.ds_donvi)
     tien = c3.number_input("Phí (VNĐ)", min_value=0, step=1000)
-    if st.form_submit_button("💾 Lưu"):
+    if st.form_submit_button("💾 Lưu dữ liệu"):
         ws.append_row([ngay.strftime("%d/%m/%Y"), nd, dv, int(tien)])
         st.cache_resource.clear()
         st.rerun()
@@ -147,11 +169,11 @@ df = pd.DataFrame(data[1:], columns=data[0])
 df["Phí (VNĐ)"] = df["Phí (VNĐ)"].apply(lambda x: int(re.sub(r"[^\d]", "", str(x)) or 0))
 df["Ngày"] = pd.to_datetime(df["Ngày"], format="%d/%m/%Y", errors="coerce")
 months = sorted(df["Ngày"].dt.strftime("%m/%Y").dropna().unique(), reverse=True)
-thang = st.selectbox("📅 Chọn tháng", months)
+thang = st.selectbox("📅 Chọn tháng hiển thị", months)
 df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang]
 
 # =========================
-# 7. HIỂN THỊ BẢNG (Header xanh dương)
+# 7. HIỂN THỊ BẢNG (Header màu xanh lá #5B7E3C)
 # =========================
 h1, h2, h3, h4, h5, h6 = st.columns([1, 2.5, 7, 3, 3, 1.5])
 h1.markdown('<div class="header-col header-left">STT</div>', unsafe_allow_html=True)
@@ -174,10 +196,10 @@ for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
             ws.delete_rows(i + 2)
             st.cache_resource.clear()
             st.rerun()
-    st.markdown('<hr style="margin:0; border:0.5px solid #f0f2f6;">', unsafe_allow_html=True)
+    st.markdown('<hr style="margin:0; border:0.5px solid #f1f4ef;">', unsafe_allow_html=True)
 
 # =========================
-# 8. TỔNG CỘNG (Đã sửa màu xanh đồng bộ #1f77b4)
+# 8. TỔNG CỘNG (Màu xanh lá đồng bộ)
 # =========================
 tong = int(df_f["Phí (VNĐ)"].sum())
 st.markdown(f'<div class="total-box">💰 TỔNG CHI PHÍ THÁNG {thang}: {tong:,.0f} VNĐ</div>', unsafe_allow_html=True)
