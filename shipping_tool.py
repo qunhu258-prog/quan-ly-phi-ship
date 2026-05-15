@@ -218,63 +218,43 @@ df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang]
 # =========================
 st.markdown("""
 <style>
-    /* Chữ trong header: in đậm, màu trắng */
-    .header-text {
-        font-weight: bold;
+    .header-col {
+        background-color: #1f77b4;
+        padding: 10px;
         color: white;
-        margin-bottom: 0;
-    }
-    /* Các dòng dữ liệu bên dưới */
-    .row-style {
-        font-size: 14px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        padding: 5px 0;
-    }
-    /* Làm gọn nút xóa */
-    .stButton > button {
-        padding: 0px 10px;
-        border-radius: 5px;
+        font-weight: bold;
+        text-align: left;
+        border-radius: 4px;
+        margin-bottom: 5px;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# 2. Tạo Header bằng st.container và st.columns để khớp vị trí tuyệt đối
-# Mình dùng background màu xanh dương (#1f77b4)
-header = st.container()
-with header:
-    # Bo góc và đổ màu xanh cho cả dòng header
-    st.markdown('<div style="background-color: #1f77b4; padding: 10px; border-radius: 8px 8px 0 0;">', unsafe_allow_html=True)
-    h1, h2, h3, h4, h5, h6 = st.columns([1, 2.5, 7, 3, 3, 1.5])
-    h1.markdown('<p class="header-text">STT</p>', unsafe_allow_html=True)
-    h2.markdown('<p class="header-text">Ngày</p>', unsafe_allow_html=True)
-    h3.markdown('<p class="header-text">Nội dung</p>', unsafe_allow_html=True)
-    h4.markdown('<p class="header-text">ĐVVC</p>', unsafe_allow_html=True)
-    h5.markdown('<p class="header-text">Phí</p>', unsafe_allow_html=True)
-    h6.markdown('<p class="header-text">Xóa</p>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+# 2. Tạo Header bằng cách đổ màu trực tiếp vào từng cột
+h1, h2, h3, h4, h5, h6 = st.columns([1, 2.5, 7, 3, 3, 1.5])
 
-# 3. Danh sách dòng dữ liệu (Dùng đúng tỷ lệ cột của Header)
+h1.markdown('<div class="header-col">STT</div>', unsafe_allow_html=True)
+h2.markdown('<div class="header-col">Ngày</div>', unsafe_allow_html=True)
+h3.markdown('<div class="header-col">Nội dung</div>', unsafe_allow_html=True)
+h4.markdown('<div class="header-col">ĐVVC</div>', unsafe_allow_html=True)
+h5.markdown('<div class="header-col">Phí</div>', unsafe_allow_html=True)
+h6.markdown('<div class="header-col">Xóa</div>', unsafe_allow_html=True)
+
+# 3. Phần vòng lặp dữ liệu bên dưới (Như giữ nguyên tỷ lệ cột để khớp hàng)
 for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
     ngay_txt = row["Ngày"].strftime("%d/%m/%Y") if not pd.isna(row["Ngày"]) else ""
+    c1, c2, c3, c4, c5, c6 = st.columns([1, 2.5, 7, 3, 3, 1.5])
     
-    # Tạo container cho mỗi dòng để có thể thêm đường kẻ mờ ở dưới cho đẹp
-    with st.container():
-        c1, c2, c3, c4, c5, c6 = st.columns([1, 2.5, 7, 3, 3, 1.5])
-        
-        c1.markdown(f"<div class='row-style'>{idx}</div>", unsafe_allow_html=True)
-        c2.markdown(f"<div class='row-style'>{ngay_txt}</div>", unsafe_allow_html=True)
-        # Tooltip hiện nội dung đầy đủ khi rê chuột
-        c3.markdown(f"<div class='row-style' title='{row['Nội dung']}'>{row['Nội dung']}</div>", unsafe_allow_html=True)
-        c4.markdown(f"<div class='row-style'>{row['Đơn vị']}</div>", unsafe_allow_html=True)
-        c5.markdown(f"<div class='row-style'><b>{row['Phí (VNĐ)']:,}</b></div>", unsafe_allow_html=True)
-        
-        # Nút xóa dùng icon X đỏ như hình Như gửi
-        if c6.button("❌", key=f"del_{i}"):
-            ws.delete_rows(i + 2)
-            st.cache_resource.clear()
-            st.rerun()
+    c1.markdown(f"<div class='row-style'>{idx}</div>", unsafe_allow_html=True)
+    c2.markdown(f"<div class='row-style'>{ngay_txt}</div>", unsafe_allow_html=True)
+    c3.markdown(f"<div class='row-style' title='{row['Nội dung']}'>{row['Nội dung']}</div>", unsafe_allow_html=True)
+    c4.markdown(f"<div class='row-style'>{row['Đơn vị']}</div>", unsafe_allow_html=True)
+    c5.markdown(f"<div class='row-style'><b>{row['Phí (VNĐ)']:,}</b></div>", unsafe_allow_html=True)
+    
+    if c6.button("❌", key=f"del_{i}"):
+        ws.delete_rows(i + 2)
+        st.cache_resource.clear()
+        st.rerun()
         
         # Thêm đường kẻ ngang mờ giữa các dòng
         st.markdown('<hr style="margin: 0; border: 0.5px solid #f0f2f6;">', unsafe_allow_html=True)
