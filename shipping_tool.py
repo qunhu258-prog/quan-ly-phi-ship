@@ -16,13 +16,12 @@ st.set_page_config(layout="wide")
 st.markdown("""
 <style>
 
-/* FULL WIDTH */
 .block-container {
     padding: 2rem 3rem;
     max-width: 100%;
 }
 
-/* HEADER STICKY */
+/* HEADER */
 .header-row {
     display: flex;
     font-weight: bold;
@@ -38,33 +37,33 @@ st.markdown("""
 /* ROW */
 .row {
     display: flex;
-    padding: 12px 8px;
+    padding: 10px 8px;
     border-bottom: 1px solid #eee;
     transition: 0.2s;
 }
 
-/* HOVER EFFECT */
+/* HOVER */
 .row:hover {
     background: #f3f6ff;
-    transform: scale(1.002);
 }
 
-/* COL WIDTH */
-.col-stt { width: 6%; }
-.col-date { width: 14%; }
-.col-content { width: 40%; }
-.col-unit { width: 18%; }
-.col-money { width: 15%; }
-.col-action { width: 7%; }
+/* COL */
+.c1 { width: 6%; }
+.c2 { width: 14%; }
+.c3 { width: 40%; }
+.c4 { width: 18%; }
+.c5 { width: 15%; }
+.c6 { width: 7%; }
 
-/* DELETE BUTTON */
-.delete-btn button {
-    background: #ff4b4b;
-    color: white;
-    border-radius: 8px;
-    border: none;
-    padding: 4px 8px;
+.total-box {
+    padding: 18px;
+    border-radius: 15px;
+    font-size: 22px;
+    font-weight: bold;
+    text-align: center;
+    background: linear-gradient(90deg,#ffeaa7,#fab1a0);
 }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -111,9 +110,61 @@ ws = ket_noi_sheet()
 
 
 # =========================
+# SESSION STATE
+# =========================
+if "ds_donvi" not in st.session_state:
+    st.session_state.ds_donvi = ["Ahamove 🛵", "Grab 🚗", "Lalamove 🚛", "GHTK 📦"]
+
+
+# =========================
+# SIDEBAR (RESTORED)
+# =========================
+with st.sidebar:
+    st.header("⚙️ Đơn vị vận chuyển")
+
+    new = st.text_input("Thêm đơn vị")
+
+    if st.button("➕ Thêm"):
+        if new and new not in st.session_state.ds_donvi:
+            st.session_state.ds_donvi.append(new)
+            st.rerun()
+
+    if st.session_state.ds_donvi:
+        del_unit = st.selectbox("Xóa đơn vị", st.session_state.ds_donvi)
+
+        if st.button("🗑 Xóa"):
+            st.session_state.ds_donvi.remove(del_unit)
+            st.rerun()
+
+    st.divider()
+
+    if st.button("🔄 Làm tươi"):
+        st.cache_resource.clear()
+        st.rerun()
+
+
+# =========================
 # TITLE
 # =========================
-st.title("🚚 CHI PHÍ GIAO HÀNG")
+st.title("🚚 DASHBOARD CHI PHÍ GIAO HÀNG")
+
+
+# =========================
+# FORM NHẬP LIỆU (RESTORED)
+# =========================
+with st.form("form_nhap", clear_on_submit=True):
+
+    c1, c2, c3 = st.columns([1, 3, 1])
+
+    ngay = c1.date_input("Ngày", datetime.now())
+    nd = c2.text_input("Nội dung")
+    dv = c3.selectbox("Đơn vị", st.session_state.ds_donvi)
+    tien = c3.number_input("Phí (VNĐ)", min_value=0, step=1000)
+
+    if st.form_submit_button("💾 Lưu"):
+        ws.append_row([ngay.strftime("%d/%m/%Y"), nd, dv, int(tien)])
+        st.cache_resource.clear()
+        st.rerun()
 
 
 # =========================
@@ -129,7 +180,7 @@ df = pd.DataFrame(data[1:], columns=data[0])
 
 
 # =========================
-# CLEAN MONEY
+# CLEAN
 # =========================
 def clean_money(x):
     return int(re.sub(r"[^\d]", "", str(x)) or 0)
@@ -149,14 +200,14 @@ df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang]
 
 
 # =========================
-# TOTAL
+# KPI
 # =========================
 tong = int(df_f["Phí (VNĐ)"].sum())
 
-col1, col2, col3 = st.columns(3)
-col1.metric("📦 Số đơn", len(df_f))
-col2.metric("💰 Tổng chi", f"{tong:,.0f} VNĐ")
-col3.metric("🚚 TB / đơn", f"{tong/max(len(df_f),1):,.0f} VNĐ")
+c1, c2, c3 = st.columns(3)
+c1.metric("📦 Số đơn", len(df_f))
+c2.metric("💰 Tổng chi", f"{tong:,.0f} VNĐ")
+c3.metric("🚚 TB / đơn", f"{tong/max(len(df_f),1):,.0f}")
 
 
 st.write("---")
@@ -167,12 +218,12 @@ st.write("---")
 # =========================
 st.markdown("""
 <div class="header-row">
-    <div class="col-stt">STT</div>
-    <div class="col-date">Ngày</div>
-    <div class="col-content">Nội dung</div>
-    <div class="col-unit">ĐVVC</div>
-    <div class="col-money">Phí</div>
-    <div class="col-action">Xoá</div>
+    <div class="c1">STT</div>
+    <div class="c2">Ngày</div>
+    <div class="c3">Nội dung</div>
+    <div class="c4">ĐVVC</div>
+    <div class="c5">Phí</div>
+    <div class="c6">Xoá</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -186,11 +237,11 @@ for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
 
     c1, c2, c3, c4, c5, c6 = st.columns([0.6, 1.4, 4, 2, 1.5, 0.8])
 
-    c1.markdown(f"<div class='row'>{idx}</div>", unsafe_allow_html=True)
-    c2.markdown(f"<div class='row'>{ngay}</div>", unsafe_allow_html=True)
-    c3.markdown(f"<div class='row'>{row['Nội dung']}</div>", unsafe_allow_html=True)
-    c4.markdown(f"<div class='row'>{row['Đơn vị']}</div>", unsafe_allow_html=True)
-    c5.markdown(f"<div class='row'><b>{row['Phí (VNĐ)']:,} VNĐ</b></div>", unsafe_allow_html=True)
+    c1.markdown(f"<div class='row c1'>{idx}</div>", unsafe_allow_html=True)
+    c2.markdown(f"<div class='row c2'>{ngay}</div>", unsafe_allow_html=True)
+    c3.markdown(f"<div class='row c3'>{row['Nội dung']}</div>", unsafe_allow_html=True)
+    c4.markdown(f"<div class='row c4'>{row['Đơn vị']}</div>", unsafe_allow_html=True)
+    c5.markdown(f"<div class='row c5'><b>{row['Phí (VNĐ)']:,} VNĐ</b></div>", unsafe_allow_html=True)
 
     if c6.button("❌", key=f"del_{i}"):
         ws.delete_rows(i + 2)
@@ -199,19 +250,12 @@ for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
 
 
 # =========================
-# TOTAL BOTTOM
+# TOTAL
 # =========================
 st.markdown("---")
 
 st.markdown(f"""
-<div style="
-    padding:18px;
-    border-radius:14px;
-    font-size:22px;
-    font-weight:bold;
-    text-align:center;
-    background: linear-gradient(90deg,#ffeaa7,#fab1a0);
-">
+<div class="total-box">
 💰 TỔNG CỘNG THÁNG {thang}: {tong:,.0f} VNĐ
 </div>
 """, unsafe_allow_html=True)
