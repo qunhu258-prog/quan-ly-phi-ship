@@ -52,10 +52,18 @@ st.markdown("""
     [data-testid="column"]:last-child {
         display: flex; justify-content: center; align-items: center;
     }
+    
+    /* TOTAL BOX - Đã sửa sang màu xanh đồng bộ Header */
     .total-box {
-        padding: 18px; border-radius: 15px; font-size: 22px;
-        font-weight: bold; text-align: center;
-        background: linear-gradient(90deg,#ffeaa7,#fab1a0);
+        padding: 18px; 
+        border-radius: 15px; 
+        font-size: 22px;
+        font-weight: bold; 
+        text-align: center;
+        background-color: #1f77b4; /* Màu xanh đồng bộ */
+        color: white; /* Chữ trắng */
+        box-shadow: 0 4px 15px rgba(31, 119, 180, 0.3); /* Bóng đổ xanh nhẹ */
+        margin-top: 20px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -143,7 +151,7 @@ thang = st.selectbox("📅 Chọn tháng", months)
 df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang]
 
 # =========================
-# 7. HIỂN THỊ BẢNG
+# 7. HIỂN THỊ BẢNG (Header xanh dương)
 # =========================
 h1, h2, h3, h4, h5, h6 = st.columns([1, 2.5, 7, 3, 3, 1.5])
 h1.markdown('<div class="header-col header-left">STT</div>', unsafe_allow_html=True)
@@ -169,7 +177,7 @@ for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
     st.markdown('<hr style="margin:0; border:0.5px solid #f0f2f6;">', unsafe_allow_html=True)
 
 # =========================
-# 8. TỔNG CỘNG (Màu xanh đồng bộ)
+# 8. TỔNG CỘNG (Đã sửa màu xanh đồng bộ #1f77b4)
 # =========================
 tong = int(df_f["Phí (VNĐ)"].sum())
 st.markdown(f'<div class="total-box">💰 TỔNG CHI PHÍ THÁNG {thang}: {tong:,.0f} VNĐ</div>', unsafe_allow_html=True)
