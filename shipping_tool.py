@@ -8,10 +8,11 @@ st.set_page_config(page_title="Quản lý Phí Giao Hàng", layout="wide")
 # --- KẾT NỐI ---
 def get_conn():
     try:
-        # Lấy trực tiếp từ Secrets (đã sửa ở Bước 1)
         s = st.secrets
-        
-        # Tạo từ điển thông tin xác thực
+        # Kiểm tra xem các key quan trọng có tồn tại không để tránh lỗi KeyError
+        if "type" not in s:
+            return None, "Chưa cấu hình Secrets hoặc định dạng Secrets bị sai (Thiếu key 'type')"
+            
         creds_dict = {
             "type": s["type"],
             "project_id": s["project_id"],
@@ -25,9 +26,7 @@ def get_conn():
             "client_x509_cert_url": s["client_x509_cert_url"]
         }
         
-        # Kết nối
         gc = gspread.service_account_from_dict(creds_dict)
-        # Sử dụng ID file của Như
         sh = gc.open_by_key("1pX1uImwD770upHdJ4OKNzYxwKxd5qVeI2zQeW0SBLUg")
         return sh.get_worksheet(0), None
     except Exception as e:
