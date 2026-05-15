@@ -218,38 +218,50 @@ df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang]
 # =========================
 st.markdown("""
 <style>
-    /* TRIỆT TIÊU KHOẢNG TRẮNG GIỮA CÁC CỘT TRONG HEADER */
+    /* Triệt tiêu khoảng trắng giữa các cột trong Header */
     div[data-testid="stHorizontalBlock"]:has(.header-col) {
         gap: 0px !important;
     }
 
+    /* Style cho Header: Chữ trắng, in đậm, size to */
     .header-col {
         background-color: #1f77b4;
         color: white;
         font-weight: bold;
+        font-size: 18px;
         padding: 12px 5px;
         text-align: center;
-        border-right: 0.1px solid #ffffff33; /* Đường kẻ phân cách siêu mờ */
+        border-right: 0.1px solid #ffffff33;
     }
 
     /* Bo góc cho 2 đầu thanh header */
     .header-left { border-radius: 8px 0 0 0; }
     .header-right { border-radius: 0 8px 0 0; border-right: none; }
 
+    /* Style cho dòng dữ liệu: Chữ to (18px), căn giữa dọc */
     .row-style {
-        font-size: 14px;
+        font-size: 18px; 
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        padding: 8px 0;
-        text-align: center;
+        padding: 10px 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Căn giữa tuyệt đối cho cột chứa nút Xóa */
+    [data-testid="column"]:last-child {
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# 2. HIỂN THỊ HEADER LIỀN MẠCH
-# Container này đảm bảo các cột sát rạt nhau
+# 2. PHẦN HIỂN THỊ HEADER
 with st.container():
+    # Tỷ lệ cột khớp hoàn toàn với phần dữ liệu
     h1, h2, h3, h4, h5, h6 = st.columns([1, 2.5, 7, 3, 3, 1.5])
     h1.markdown('<div class="header-col header-left">STT</div>', unsafe_allow_html=True)
     h2.markdown('<div class="header-col">Ngày</div>', unsafe_allow_html=True)
@@ -258,23 +270,31 @@ with st.container():
     h5.markdown('<div class="header-col">Phí</div>', unsafe_allow_html=True)
     h6.markdown('<div class="header-col header-right">Xóa</div>', unsafe_allow_html=True)
 
-# 3. HIỂN THỊ DỮ LIỆU (Giữ nguyên tỷ lệ cột)
+# 3. PHẦN HIỂN THỊ DỮ LIỆU
 for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
     ngay_txt = row["Ngày"].strftime("%d/%m/%Y") if not pd.isna(row["Ngày"]) else ""
-    c1, c2, c3, c4, c5, c6 = st.columns([1, 2.5, 7, 3, 3, 1.5])
     
-    c1.markdown(f"<div class='row-style'>{idx}</div>", unsafe_allow_html=True)
-    c2.markdown(f"<div class='row-style'>{ngay_txt}</div>", unsafe_allow_html=True)
-    # Cột nội dung cho canh lề trái (left) để dễ đọc hơn
-    c3.markdown(f"<div class='row-style' style='text-align: left; padding-left: 10px;' title='{row['Nội dung']}'>{row['Nội dung']}</div>", unsafe_allow_html=True)
-    c4.markdown(f"<div class='row-style'>{row['Đơn vị']}</div>", unsafe_allow_html=True)
-    c5.markdown(f"<div class='row-style'><b>{row['Phí (VNĐ)']:,}</b></div>", unsafe_allow_html=True)
-    
-    if c6.button("❌", key=f"del_{i}"):
-        ws.delete_rows(i + 2)
-        st.cache_resource.clear()
-        st.rerun()
-    st.markdown('<hr style="margin: 0; border: 0.5px solid #f0f2f6;">', unsafe_allow_html=True)
+    with st.container():
+        c1, c2, c3, c4, c5, c6 = st.columns([1, 2.5, 7, 3, 3, 1.5])
+        
+        c1.markdown(f"<div class='row-style'>{idx}</div>", unsafe_allow_html=True)
+        c2.markdown(f"<div class='row-style'>{ngay_txt}</div>", unsafe_allow_html=True)
+        
+        # Cột nội dung căn lề trái (left) để dễ đọc, có tooltip
+        c3.markdown(f"<div class='row-style' style='text-align: left; justify-content: flex-start; padding-left: 10px;' title='{row['Nội dung']}'>{row['Nội dung']}</div>", unsafe_allow_html=True)
+        
+        c4.markdown(f"<div class='row-style'>{row['Đơn vị']}</div>", unsafe_allow_html=True)
+        c5.markdown(f"<div class='row-style'><b>{row['Phí (VNĐ)']:,}</b></div>", unsafe_allow_html=True)
+        
+        # Cột nút Xóa: Nằm chính giữa
+        with c6:
+            if st.button("❌", key=f"del_{i}"):
+                ws.delete_rows(i + 2)
+                st.cache_resource.clear()
+                st.rerun()
+        
+        # Đường kẻ ngang mờ phân cách các dòng
+        st.markdown('<hr style="margin: 0; border: 0.5px solid #f0f2f6;">', unsafe_allow_html=True)
     
 # =========================
 # TOTAL
