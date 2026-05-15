@@ -233,16 +233,23 @@ st.markdown("""
 # =========================
 st.subheader("📦 Chi tiết giao dịch")
 
+tong = int(df_f["Phí (VNĐ)"].sum())
+
+
 for idx, (_, row) in enumerate(df_f.iterrows(), start=1):
 
-    st.markdown(f"""
-    <div class="card">
-        <b>#{idx}</b> — {row['Nội dung']} <br>
-        🚚 {row['Đơn vị']} <br>
-        💰 <b>{row['Phí (VNĐ)']:,} VNĐ</b> <br>
-        📅 {row['Ngày'].strftime('%d/%m/%Y') if not pd.isna(row['Ngày']) else ''}
-    </div>
-    """, unsafe_allow_html=True)
+    c1, c2, c3, c4, c5 = st.columns([0.5, 3, 2, 2, 1])
+
+    c1.write(idx)  # ⭐ STT bắt đầu từ 1
+    c2.write(row["Nội dung"])
+    c3.write(row["Đơn vị"])
+    c4.write(f"{row['Phí (VNĐ)']:,} VNĐ")
+
+    if c5.button("❌", key=f"del_{idx}"):
+
+        ws.delete_rows(df_f.index[idx-1] + 2)
+        st.cache_resource.clear()
+        st.rerun()
 # =========================
 # TOTAL
 # =========================
