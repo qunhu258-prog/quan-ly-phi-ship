@@ -34,6 +34,11 @@ st.markdown("""
 <style>
     .block-container { padding: 2rem 3rem; max-width: 100%; }
     
+    /* Đổi màu tiêu đề st.title */
+    h1 {
+        color: #5B7E3C !important;
+    }
+
     /* Taskbar sidebar */
     .taskbar-box {
         background-color: #f1f4ef; padding: 15px; border-radius: 10px; 
@@ -50,7 +55,7 @@ st.markdown("""
     .header-left { border-radius: 8px 0 0 0; }
     .header-right { border-radius: 0 8px 0 0; border-right: none; }
     
-    /* Nội dung dòng */
+    /* Nội dung dòng bảng */
     .row-style {
         font-size: 18px; padding: 10px 0; display: flex;
         align-items: center; justify-content: center;
@@ -65,8 +70,8 @@ st.markdown("""
         margin-top: 20px;
     }
 
-    /* Đổi màu các nút bấm Streamlit mặc định sang xanh lá cho đồng bộ */
-    button[kind="primary"], .stButton > button {
+    /* Đổi màu các nút bấm Streamlit mặc định */
+    .stButton > button {
         border-color: #5B7E3C !important;
         color: #5B7E3C !important;
     }
@@ -118,6 +123,7 @@ with st.sidebar:
 
     st.header("⚙️ Cài đặt")
     
+    # Tự động lấy danh sách ĐVVC từ dữ liệu cũ trên Sheet
     data_all = ws.get_all_values()
     if len(data_all) > 1:
         df_all = pd.DataFrame(data_all[1:], columns=data_all[0])
@@ -126,6 +132,8 @@ with st.sidebar:
         list_tu_sheet = []
 
     mac_dinh = ["Ahamove 🛵", "Grab 🚗", "Lalamove 🚛", "GHTK 📦"]
+    
+    # Kết hợp danh sách mặc định và danh sách từ sheet
     if "ds_donvi" not in st.session_state:
         st.session_state.ds_donvi = list(set(mac_dinh + list_tu_sheet))
 
@@ -146,7 +154,7 @@ with st.sidebar:
         st.rerun()
 
 # =========================
-# 6. NHẬP LIỆU & XỬ LÝ
+# 6. NHẬP LIỆU & XỬ LÝ DỮ LIỆU
 # =========================
 st.title("🚚 CHI PHÍ GIAO HÀNG")
 with st.form("form_nhap", clear_on_submit=True):
@@ -173,7 +181,7 @@ thang = st.selectbox("📅 Chọn tháng hiển thị", months)
 df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang]
 
 # =========================
-# 7. HIỂN THỊ BẢNG (Header màu xanh lá #5B7E3C)
+# 7. HIỂN THỊ BẢNG (Màu xanh lá #5B7E3C)
 # =========================
 h1, h2, h3, h4, h5, h6 = st.columns([1, 2.5, 7, 3, 3, 1.5])
 h1.markdown('<div class="header-col header-left">STT</div>', unsafe_allow_html=True)
