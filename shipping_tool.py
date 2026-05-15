@@ -218,53 +218,47 @@ df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang]
 # =========================
 st.markdown("""
 <style>
-    .header-container {
-        background-color: #f0f2f6; /* Màu xám nhạt sang trọng */
+    /* Bo góc và đổ màu cho toàn bộ dòng tiêu đề */
+    .header-box {
+        background-color: #f0f2f6; 
         padding: 10px;
-        border-radius: 5px;
-        margin-bottom: 10px;
-    }
-    .header-text {
-        font-weight: bold;
-        color: #1f77b4; /* Màu xanh đậm chuyên nghiệp */
-        font-size: 15px;
-    }
-    .row-style {
-        font-size: 14px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        border-radius: 8px;
         display: flex;
-        align-items: center;
-        padding: 5px 0;
+        margin-bottom: 5px;
+    }
+    .header-item {
+        font-weight: bold;
+        color: #1f77b4;
+        font-size: 14px;
+        text-align: left;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# 2. Hiển thị Header có màu nền và chữ in đậm
-with st.container():
-    st.markdown('<div class="header-container">', unsafe_allow_html=True)
-    h1, h2, h3, h4, h5, h6 = st.columns([1, 2.5, 7, 3, 3, 1.5])
-    h1.markdown('<p class="header-text">STT</p>', unsafe_allow_html=True)
-    h2.markdown('<p class="header-text">Ngày</p>', unsafe_allow_html=True)
-    h3.markdown('<p class="header-text">Nội dung</p>', unsafe_allow_html=True)
-    h4.markdown('<p class="header-text">ĐVVC</p>', unsafe_allow_html=True)
-    h5.markdown('<p class="header-text">Phí</p>', unsafe_allow_html=True)
-    h6.markdown('<p class="header-text">Xóa</p>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+# 2. Tạo Header bằng cách dùng HTML trực tiếp để đảm bảo màu nền ôm sát chữ
+st.markdown(f"""
+    <div class="header-box">
+        <div style="flex: 1;" class="header-item">STT</div>
+        <div style="flex: 2.5;" class="header-item">Ngày</div>
+        <div style="flex: 7;" class="header-item">Nội dung</div>
+        <div style="flex: 3;" class="header-item">ĐVVC</div>
+        <div style="flex: 3;" class="header-item">Phí</div>
+        <div style="flex: 1.5; text-align: center;" class="header-item">Xóa</div>
+    </div>
+""", unsafe_allow_html=True)
 
-# 3. Danh sách dòng dữ liệu (giữ nguyên tỷ lệ cột để khớp với header)
+# 3. Phần dữ liệu bên dưới (Như giữ nguyên tỷ lệ cột cũ để khớp hàng)
 for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
     ngay_txt = row["Ngày"].strftime("%d/%m/%Y") if not pd.isna(row["Ngày"]) else ""
     c1, c2, c3, c4, c5, c6 = st.columns([1, 2.5, 7, 3, 3, 1.5])
     
-    c1.markdown(f"<div class='row-style'>{idx}</div>", unsafe_allow_html=True)
-    c2.markdown(f"<div class='row-style'>{ngay_txt}</div>", unsafe_allow_html=True)
-    c3.markdown(f"<div class='row-style' title='{row['Nội dung']}'>{row['Nội dung']}</div>", unsafe_allow_html=True)
-    c4.markdown(f"<div class='row-style'>{row['Đơn vị']}</div>", unsafe_allow_html=True)
-    c5.markdown(f"<div class='row-style'><b>{row['Phí (VNĐ)']:,}</b></div>", unsafe_allow_html=True)
+    with c1: st.write(f"{idx}")
+    with c2: st.write(f"{ngay_txt}")
+    with c3: st.markdown(f"<div class='row-style' title='{row['Nội dung']}'>{row['Nội dung']}</div>", unsafe_allow_html=True)
+    with c4: st.write(f"{row['Đơn vị']}")
+    with c5: st.write(f"**{row['Phí (VNĐ)']:,}**")
     
-    if c6.button("❌", key=f"del_{i}"):
+    if c6.button("❌", key=f"del_{i}"): # Đổi icon X cho chuyên nghiệp như hình
         ws.delete_rows(i + 2)
         st.cache_resource.clear()
         st.rerun()
