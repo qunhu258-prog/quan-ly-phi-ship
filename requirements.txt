@@ -1,7 +1,1 @@
-﻿```txt
-streamlit
-pandas
-gspread
-google-auth
-google-auth-oauthlib
-```
+﻿streamlit pandas gspread google-auth google-auth-oauthlib
