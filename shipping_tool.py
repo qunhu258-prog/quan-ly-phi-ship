@@ -11,7 +11,7 @@ from google.oauth2.service_account import Credentials
 SHEET_ID = "1pX1uImwD770upHdJ4OKNzYxwKxd5qVeI2zQeW0SBLUg"
 
 # =========================
-# KẾT NỐI SHEET
+# CONNECT SHEET
 # =========================
 @st.cache_resource
 def ket_noi_sheet():
@@ -55,7 +55,7 @@ st.title("🚚 Quản Lý Chi Phí Giao Hàng")
 # =========================
 # SESSION STATE
 # =========================
-if 'ds_donvi' not in st.session_state:
+if "ds_donvi" not in st.session_state:
     st.session_state.ds_donvi = [
         "Ahamove 🛵",
         "Grab 🚗",
@@ -68,22 +68,37 @@ if 'ds_donvi' not in st.session_state:
 # SIDEBAR
 # =========================
 with st.sidebar:
-    st.header("⚙️ Cài đặt")
+    st.header("⚙️ Cài đặt đơn vị")
 
+    # ➕ thêm đơn vị
     moi = st.text_input("Thêm đơn vị mới")
 
-    if st.button("Thêm"):
+    if st.button("➕ Thêm"):
         if moi and moi not in st.session_state.ds_donvi:
             st.session_state.ds_donvi.append(moi)
             st.rerun()
 
+    st.divider()
+
+    # 🗑 xoá đơn vị
+    if st.session_state.ds_donvi:
+        xoa = st.selectbox("Chọn đơn vị để xoá", st.session_state.ds_donvi)
+
+        if st.button("🗑 Xoá đơn vị"):
+            st.session_state.ds_donvi.remove(xoa)
+            st.success("Đã xoá")
+            st.rerun()
+
+    st.divider()
+
+    # 🔄 làm tươi
     if st.button("🔄 Làm tươi dữ liệu"):
         st.cache_resource.clear()
         st.rerun()
 
 
 # =========================
-# FORM NHẬP LIỆU
+# FORM NHẬP
 # =========================
 with st.form("form_nhap", clear_on_submit=True):
 
@@ -107,67 +122,97 @@ with st.form("form_nhap", clear_on_submit=True):
                 input_tien
             ])
 
-            st.success("Đã lưu thành công! ✅")
-            st.balloons()
+            st.success("Đã lưu!")
             st.cache_resource.clear()
             st.rerun()
 
         else:
-            st.error(f"Lỗi: {err}")
+            st.error(err)
 
 
 # =========================
-# HIỂN THỊ + XOÁ DÒNG
+# LOAD DATA
 # =========================
 st.write("---")
 
 wks, err = ket_noi_sheet()
 
-if wks:
+if not wks:
+    st.error(err)
+    st.stop()
 
+data = wks.get_all_values()
+
+if len(data) <= 1:
+    st.info("Chưa có dữ liệu")
+    st.stop()
+
+if data[0] != ['Ngày', 'Nội dung', 'Đơn vị', 'Phí (VNĐ)']:
+    wks.insert_row(['Ngày', 'Nội dung', 'Đơn vị', 'Phí (VNĐ)'], 1)
     data = wks.get_all_values()
 
-    if len(data) <= 1:
-        st.info("Chưa có dữ liệu.")
-        st.stop()
+df = pd.DataFrame(data[1:], columns=data[0])
 
-    # đảm bảo header
-    if data[0] != ['Ngày', 'Nội dung', 'Đơn vị', 'Phí (VNĐ)']:
-        wks.insert_row(['Ngày', 'Nội dung', 'Đơn vị', 'Phí (VNĐ)'], 1)
-        data = wks.get_all_values()
 
-    df = pd.DataFrame(data[1:], columns=data[0])
+# =========================
+# FIX TIỀN
+# =========================
+def clean_money(x):
+    x = str(x)
+    x = re.sub(r"[^\d]", "", x)
+    return int(x) if x else 0
 
-    # =========================
-    # FIX TIỀN = 0
-    # =========================
-    def clean_money(x):
-        x = str(x)
-        x = re.sub(r"[^\d]", "", x)
-        return int(x) if x else 0
+df["Phí (VNĐ)"] = df["Phí (VNĐ)"].apply(clean_money)
+df["Ngày"] = pd.to_datetime(df["Ngày"], format="%d/%m/%Y", errors="coerce")
 
-    df["Phí (VNĐ)"] = df["Phí (VNĐ)"].apply(clean_money)
 
-    # =========================
-    # HIỂN THỊ NGƯỢC MỚI NHẤT
-    # =========================
-    st.subheader("📋 Danh sách chi phí")
+# =========================
+# FILTER THÁNG
+# =========================
+thang_list = sorted(
+    df["Ngày"].dt.strftime("%m/%Y").dropna().unique(),
+    reverse=True
+)
 
-    for i, row in df[::-1].iterrows():
+thang_chon = st.selectbox("📅 Chọn tháng", thang_list)
 
-        c1, c2, c3, c4, c5 = st.columns([1, 3, 2, 2, 1])
+df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang_chon]
 
-        c1.write(i)
-        c2.write(row["Nội dung"])
-        c3.write(row["Đơn vị"])
-        c4.write(f"{row['Phí (VNĐ)']:,} VNĐ")
 
-        if c5.button("🗑️", key=f"del_{i}"):
+# =========================
+# TỔNG TIỀN
+# =========================
+tong = int(df_f["Phí (VNĐ)"].sum())
 
-            wks.delete_rows(i + 2)
-            st.success("Đã xoá")
-            st.cache_resource.clear()
-            st.rerun()
+col1, col2 = st.columns([3, 1])
+col1.subheader(f"📋 Dữ liệu tháng {thang_chon}")
+col2.metric("💰 Tổng cộng", f"{tong:,.0f} VNĐ")
 
-else:
-    st.error(f"Kết nối thất bại: {err}")
+
+# =========================
+# HIỂN THỊ + XOÁ
+# =========================
+st.subheader("🧾 Chi tiết giao dịch")
+
+for i, row in df_f.iterrows():
+
+    c1, c2, c3, c4, c5 = st.columns([1, 3, 2, 2, 1])
+
+    c1.write(i)
+    c2.write(row["Nội dung"])
+    c3.write(row["Đơn vị"])
+    c4.write(f"{row['Phí (VNĐ)']:,} VNĐ")
+
+    if c5.button("🗑", key=f"del_{i}"):
+
+        wks.delete_rows(i + 2)
+        st.success("Đã xoá")
+        st.cache_resource.clear()
+        st.rerun()
+
+
+# =========================
+# FULL TABLE (OPTIONAL VIEW)
+# =========================
+with st.expander("📊 Xem toàn bộ dữ liệu"):
+    st.dataframe(df_f, use_container_width=True, hide_index=True)
