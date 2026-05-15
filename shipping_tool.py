@@ -1,50 +1,42 @@
 ﻿import streamlit as st
-import pandas as pd
-from datetime import datetime
 import gspread
+from google.oauth2.service_account import Credentials
 
-# Cấu hình trang
-st.set_page_config(page_title="Quản lý Phí Giao Hàng", layout="wide")
-
+# Hàm kết nối an toàn
 def get_conn():
     try:
-        # Lấy dữ liệu từ Secrets
-        s = st.secrets
-        # Xử lý ký tự xuống dòng cho private_key để tránh lỗi PEM file
-        pk = s["private_key"].replace("\\n", "\n")
+        # Lấy thông tin từ Secrets đã cấu hình
+        creds_dict = st.secrets["gcp_service_account"]
+        scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+        creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
+        client = gspread.authorize(creds)
         
-        creds = {
-            "type": "service_account",
-            "project_id": s["project_id"],
-            "private_key_id": s["private_key_id"],
-            "private_key": pk,
-            "client_email": s["client_email"],
-            "client_id": s["client_id"],
-            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-            "token_uri": "https://oauth2.googleapis.com/token",
-            "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-            "client_x509_cert_url": s["client_x509_cert_url"]
-        }
+        # Mở file bằng ID Như đã chia sẻ (image_2528c8.png)
+        sh = client.open_by_key("1pX1uImwD770upHdJ4OKNzYxwKxd5qVeI2zQeW0SBLUg")
         
-        # Kết nối tới Google Sheets
-        gc = gspread.service_account_from_dict(creds)
-        # ID file của Như: 1pX1uImwD770upHdJ4OKNzYxwKxd5qVeI2zQeW0SBLUg
-        sh = gc.open_by_key("1pX1uImwD770upHdJ4OKNzYxwKxd5qVeI2zQeW0SBLUg")
-        
-        return sh.worksheet("Trang tính1"), None
+        # Mở trang tính đầu tiên
+        return sh.get_worksheet(0) 
     except Exception as e:
-        return None, str(e)
+        st.error(f"Lỗi kết nối: {e}")
+        return None
 
-st.title("🚚 Quản Lý Chi Phí Giao Hàng")
+# Gọi hàm kết nối
+ws = get_conn()
 
-# Thực hiện kết nối
-ws, err = get_conn()
-
-if err:
-    st.error(f"❌ Kết nối thất bại. Lỗi từ hệ thống: {err}")
-    st.info("Như kiểm tra xem đã chia sẻ file Sheets cho email service account chưa nhé!")
+# Chỉ khi kết nối thành công mới cho phép nhấn nút Lưu
+if ws is not None:
+    # ... phần code vẽ giao diện (input ngày, nội dung, đơn giá...) của Như ...
+    
+    if st.button("Lưu thông tin"):
+        try:
+            # Ghi dữ liệu vào dòng cuối cùng
+            ws.append_row([ngay, noi_dung, don_vi, phi])
+            st.success("Đã lưu dữ liệu thành công vào Google Sheets!")
+            st.balloons()
+        except Exception as e:
+            st.error(f"Lỗi khi lưu: {e}")
 else:
-    # Form nhập liệu
+    st.warning("Ứng dụng chưa thể kết nối với dữ liệu. Vui lòng kiểm tra lại quyền chia sẻ file Sheets.")    # Form nhập liệu
     with st.form("nhap_lieu", clear_on_submit=True):
         c1, c2, c3 = st.columns([1, 2, 1])
         ngay = c1.date_input("Ngày tháng năm", datetime.now())
