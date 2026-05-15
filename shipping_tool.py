@@ -2,56 +2,22 @@
 import gspread
 import pandas as pd
 import re
-import altair as alt
 from datetime import datetime
 from google.oauth2.service_account import Credentials
 
 # =========================
-# FULL WIDTH UI
+# FULL WIDTH LAYOUT
 # =========================
 st.set_page_config(layout="wide")
 
-st.markdown("""
-<style>
-.block-container {
-    padding: 2rem 3rem;
-    max-width: 100%;
-}
-
-h1 {
-    font-size: 42px !important;
-    color: #ff4b4b;
-}
-
-/* CARD giao dịch */
-.card {
-    padding: 12px 14px;
-    border-radius: 12px;
-    background: #f7f9ff;
-    margin-bottom: 10px;
-    border: 1px solid #e6e9ff;
-}
-
-.total-box {
-    padding: 18px;
-    border-radius: 15px;
-    font-size: 22px;
-    font-weight: bold;
-    text-align: center;
-    background: linear-gradient(90deg, #ffeaa7, #fab1a0);
-}
-</style>
-""", unsafe_allow_html=True)
-
-
 # =========================
-# CONFIG SHEET
+# CONFIG
 # =========================
 SHEET_ID = "1pX1uImwD770upHdJ4OKNzYxwKxd5qVeI2zQeW0SBLUg"
 
 
 # =========================
-# CONNECT GOOGLE SHEET
+# CONNECT SHEET
 # =========================
 @st.cache_resource
 def ket_noi_sheet():
@@ -86,9 +52,79 @@ ws = ket_noi_sheet()
 
 
 # =========================
+# FULL WIDTH CSS
+# =========================
+st.markdown("""
+<style>
+.block-container {
+    padding-left: 3rem;
+    padding-right: 3rem;
+    max-width: 100%;
+}
+
+h1 {
+    font-size: 40px !important;
+}
+
+.total-box {
+    background: #fff3cd;
+    padding: 12px;
+    border-radius: 12px;
+    font-weight: bold;
+    margin-top: 10px;
+}
+</style>
+""", unsafe_allow_html=True)
+
+
+# =========================
 # TITLE
 # =========================
-st.title("🚚 Dashboard Quản Lý Chi Phí Giao Hàng")
+st.title("🚚 Quản Lý Chi Phí Giao Hàng")
+
+
+# =========================
+# SESSION STATE
+# =========================
+if "ds_donvi" not in st.session_state:
+    st.session_state.ds_donvi = ["Ahamove 🛵", "Grab 🚗", "Lalamove 🚛", "GHTK 📦"]
+
+
+# =========================
+# SIDEBAR
+# =========================
+with st.sidebar:
+    st.header("⚙️ Cài đặt")
+
+    moi = st.text_input("Thêm đơn vị")
+
+    if st.button("➕ Thêm"):
+        if moi and moi not in st.session_state.ds_donvi:
+            st.session_state.ds_donvi.append(moi)
+            st.rerun()
+
+    if st.button("🔄 Làm tươi"):
+        st.cache_resource.clear()
+        st.rerun()
+
+
+# =========================
+# FORM NHẬP
+# =========================
+with st.form("form_nhap", clear_on_submit=True):
+
+    c1, c2, c3 = st.columns([1, 3, 1])
+
+    ngay = c1.date_input("Ngày", datetime.now())
+    nd = c2.text_input("Nội dung")
+    dv = c3.selectbox("Đơn vị", st.session_state.ds_donvi)
+    tien = c3.number_input("Phí (VNĐ)", min_value=0, step=1000)
+
+    if st.form_submit_button("💾 Lưu"):
+        ws.append_row([ngay.strftime("%d/%m/%Y"), nd, dv, int(tien)])
+        st.success("Đã lưu")
+        st.cache_resource.clear()
+        st.rerun()
 
 
 # =========================
@@ -111,72 +147,54 @@ def clean_money(x):
 
 
 df["Phí (VNĐ)"] = df["Phí (VNĐ)"].apply(clean_money)
-df["Ngày"] = pd.to_datetime(df["Ngày"], format="%d/%m/%Y", errors="coerce")
 
 
 # =========================
 # FILTER MONTH
 # =========================
+df["Ngày"] = pd.to_datetime(df["Ngày"], format="%d/%m/%Y", errors="coerce")
+
 months = sorted(df["Ngày"].dt.strftime("%m/%Y").dropna().unique(), reverse=True)
+
 thang = st.selectbox("📅 Chọn tháng", months)
 
 df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang]
 
 
 # =========================
-# KPI DASHBOARD
-# =========================
-tong = int(df_f["Phí (VNĐ)"].sum())
-
-col1, col2, col3 = st.columns(3)
-
-col1.metric("📦 Số đơn", len(df_f))
-col2.metric("💰 Tổng chi", f"{tong:,.0f} VNĐ")
-col3.metric("🚚 Trung bình / đơn", f"{tong/max(len(df_f),1):,.0f} VNĐ")
-
-
-st.write("---")
-
-
-# =========================
-# CHART THEO ĐƠN VỊ
-# =========================
-chart_data = df_f.groupby("Đơn vị")["Phí (VNĐ)"].sum().reset_index()
-
-bar = alt.Chart(chart_data).mark_bar().encode(
-    x="Đơn vị",
-    y="Phí (VNĐ)",
-    color="Đơn vị"
-)
-
-st.altair_chart(bar, use_container_width=True)
-
-
-st.write("---")
-
-
-# =========================
-# LIST GIAO DỊCH (CARD UI)
+# TABLE CUSTOM (STT = 1)
 # =========================
 st.subheader("📦 Chi tiết giao dịch")
 
+tong = int(df_f["Phí (VNĐ)"].sum())
+
+
 for idx, (_, row) in enumerate(df_f.iterrows(), start=1):
 
-    st.markdown(f"""
-    <div class="card">
-        <b>#{idx}</b> — {row['Nội dung']} <br>
-        🚚 {row['Đơn vị']} <br>
-        💰 <b>{row['Phí (VNĐ)']:,} VNĐ</b> <br>
-        📅 {row['Ngày'].strftime('%d/%m/%Y') if not pd.isna(row['Ngày']) else ''}
+    c1, c2, c3, c4, c5 = st.columns([0.5, 3, 2, 2, 1])
+
+    c1.write(idx)  # ⭐ STT bắt đầu từ 1
+    c2.write(row["Nội dung"])
+    c3.write(row["Đơn vị"])
+    c4.write(f"{row['Phí (VNĐ)']:,} VNĐ")
+
+    if c5.button("❌", key=f"del_{idx}"):
+
+        ws.delete_rows(df_f.index[idx-1] + 2)
+        st.cache_resource.clear()
+        st.rerun()
+
+
+# =========================
+# TOTAL AT BOTTOM
+# =========================
+st.markdown("---")
+
+st.markdown(
+    f"""
+    <div class="total-box">
+        💰 TỔNG CỘNG THÁNG {thang}: {tong:,.0f} VNĐ
     </div>
-    """, unsafe_allow_html=True)
-
-
-# =========================
-# TOTAL BANNER
-# =========================
-st.markdown(f"""
-<div class="total-box">
-💰 TỔNG CỘNG THÁNG {thang}: {tong:,.0f} VNĐ
-</div>
-""", unsafe_allow_html=True)
+    """,
+    unsafe_allow_html=True
+)
