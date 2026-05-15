@@ -8,9 +8,7 @@ st.set_page_config(page_title="Quản lý Phí Giao Hàng", layout="wide")
 def get_conn():
     try:
         s = st.secrets
-        # Đảm bảo các ký tự xuống dòng được xử lý đúng
         pk = s["private_key"].replace("\\n", "\n")
-        
         creds = {
             "type": "service_account",
             "project_id": s["project_id"],
@@ -24,11 +22,30 @@ def get_conn():
             "client_x509_cert_url": s["client_x509_cert_url"]
         }
         gc = gspread.service_account_from_dict(creds)
-        # ID file của Như đã khớp
+        # ID file của Như: 1pX1uImwD770upHdJ4OKNzYxwKxd5qVeI2zQeW0SBLUg
         sh = gc.open_by_key("1pX1uImwD770upHdJ4OKNzYxwKxd5qVeI2zQeW0SBLUg")
-        return sh.get_worksheet(0), None
+        
+        # Lấy trang tính có tên là "Trang tinh1" như trong hình bạn gửi
+        return sh.worksheet("Trang tinh1")
     except Exception as e:
-        return None, str(e)
+        # Nếu có lỗi, nó sẽ hiện ngay lên màn hình App để Như biết lỗi gì
+        st.error(f"Lỗi kết nối cụ thể: {e}")
+        return None
+
+ws = get_conn()
+
+# Chỉ khi nào kết nối thành công (ws không phải None) mới hiện Form
+if ws:
+    with st.form("nhap_lieu", clear_on_submit=True):
+        # ... (giữ nguyên phần nội dung form của Như)
+        if st.form_submit_button("💾 Lưu thông tin"):
+            if nd:
+                try:
+                    ws.append_row([ng.strftime('%d/%m/%Y'), nd, dv, t])
+                    st.success("Đã lưu xong! ✅")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Lỗi khi ghi dữ liệu: {e}")
 
 st.title("🚚 Quản Lý Chi Phí Giao Hàng")
 
