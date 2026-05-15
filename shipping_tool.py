@@ -128,7 +128,7 @@ ws = ket_noi_sheet()
 # =========================
 # TITLE
 # =========================
-st.title("🚚 QUẢN LÝ CHI PHÍ GIAO HÀNG")
+st.title("🚚 CHI PHÍ GIAO HÀNG")
 
 
 # =========================
@@ -235,7 +235,7 @@ for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
 
     ngay_txt = row["Ngày"].strftime("%d/%m/%Y") if not pd.isna(row["Ngày"]) else ""
 
-    c1, c2, c3, c4, c5, c6 = st.columns([0.6, 1.4, 4, 2, 1.5, 0.8])
+    c1, c2, c3, c4, c5, c6 = st.columns([1, 3, 6, 3.5, 3, 0.8])
 
     c1.markdown(f"<div class='row c1'>{idx}</div>", unsafe_allow_html=True)
     c2.markdown(f"<div class='row c2'>{ngay_txt}</div>", unsafe_allow_html=True)
@@ -243,7 +243,7 @@ for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
     c4.markdown(f"<div class='row c4'>{row['Đơn vị']}</div>", unsafe_allow_html=True)
     c5.markdown(f"<div class='row c5'><b>{row['Phí (VNĐ)']:,}</b></div>", unsafe_allow_html=True)
 
-    if c6.button("Xoá", key=f"del_{i}"):
+    if c6.button("❌", key=f"del_{i}"):
         ws.delete_rows(i + 2)
         st.cache_resource.clear()
         st.rerun()
