@@ -133,5 +133,83 @@ with st.sidebar:
         st.session_state.ds_donvi = ["Ahamove 🛵", "Grab 🚗", "Lalamove 🚛", "GHTK 📦"]
 
     new = st.text_input("Thêm đơn vị")
+    # ĐOẠN NÀY ĐÃ SỬA LỖI DẤU : CHO NHƯ RỒI ĐÂY
     if st.button("➕ Thêm"):
-        if new and new not in st.session_state
+        if new and new not in st.session_state.ds_donvi:
+            st.session_state.ds_donvi.append(new)
+            st.rerun()
+
+    if st.session_state.ds_donvi:
+        del_unit = st.selectbox("Xóa đơn vị", st.session_state.ds_donvi)
+        if st.button("🗑 Xóa"):
+            st.session_state.ds_donvi.remove(del_unit)
+            st.rerun()
+
+    if st.button("🔄 Làm tươi"):
+        st.cache_resource.clear()
+        st.rerun()
+
+# =========================
+# FORM NHẬP
+# =========================
+with st.form("form_nhap", clear_on_submit=True):
+    c1, c2, c3 = st.columns([1, 3, 1])
+    ngay = c1.date_input("Ngày", dt.now())
+    nd = c2.text_input("Nội dung")
+    dv = c3.selectbox("Đơn vị", st.session_state.ds_donvi)
+    tien = c3.number_input("Phí (VNĐ)", min_value=0, step=1000)
+    if st.form_submit_button("💾 Lưu"):
+        ws.append_row([ngay.strftime("%d/%m/%Y"), nd, dv, int(tien)])
+        st.cache_resource.clear()
+        st.rerun()
+
+# =========================
+# LOAD & FILTER DATA
+# =========================
+data = ws.get_all_values()
+if len(data) <= 1:
+    st.info("Chưa có dữ liệu")
+    st.stop()
+
+df = pd.DataFrame(data[1:], columns=data[0])
+df["Phí (VNĐ)"] = df["Phí (VNĐ)"].apply(lambda x: int(re.sub(r"[^\d]", "", str(x)) or 0))
+df["Ngày"] = pd.to_datetime(df["Ngày"], format="%d/%m/%Y", errors="coerce")
+
+months = sorted(df["Ngày"].dt.strftime("%m/%Y").dropna().unique(), reverse=True)
+thang = st.selectbox("📅 Chọn tháng", months)
+df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang]
+
+# =========================
+# HIỂN THỊ BẢNG (HEADER & DATA)
+# =========================
+with st.container():
+    h1, h2, h3, h4, h5, h6 = st.columns([1, 2.5, 7, 3, 3, 1.5])
+    h1.markdown('<div class="header-col header-left">STT</div>', unsafe_allow_html=True)
+    h2.markdown('<div class="header-col">Ngày</div>', unsafe_allow_html=True)
+    h3.markdown('<div class="header-col">Nội dung</div>', unsafe_allow_html=True)
+    h4.markdown('<div class="header-col">ĐVVC</div>', unsafe_allow_html=True)
+    h5.markdown('<div class="header-col">Phí</div>', unsafe_allow_html=True)
+    h6.markdown('<div class="header-col header-right">Xóa</div>', unsafe_allow_html=True)
+
+for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
+    ngay_txt = row["Ngày"].strftime("%d/%m/%Y") if not pd.isna(row["Ngày"]) else ""
+    with st.container():
+        c1, c2, c3, c4, c5, c6 = st.columns([1, 2.5, 7, 3, 3, 1.5])
+        c1.markdown(f"<div class='row-style'>{idx}</div>", unsafe_allow_html=True)
+        c2.markdown(f"<div class='row-style'>{ngay_txt}</div>", unsafe_allow_html=True)
+        c3.markdown(f"<div class='row-style' style='text-align: left; justify-content: flex-start; padding-left: 10px;' title='{row['Nội dung']}'>{row['Nội dung']}</div>", unsafe_allow_html=True)
+        c4.markdown(f"<div class='row-style'>{row['Đơn vị']}</div>", unsafe_allow_html=True)
+        c5.markdown(f"<div class='row-style'><b>{row['Phí (VNĐ)']:,}</b></div>", unsafe_allow_html=True)
+        with c6:
+            if st.button("❌", key=f"del_{i}"):
+                ws.delete_rows(i + 2)
+                st.cache_resource.clear()
+                st.rerun()
+        st.markdown('<hr style="margin: 0; border: 0.5px solid #f0f2f6;">', unsafe_allow_html=True)
+
+# =========================
+# TOTAL
+# =========================
+tong = int(df_f["Phí (VNĐ)"].sum())
+st.markdown("---")
+st.markdown(f'<div class="total-box">💰 TỔNG CỘNG THÁNG {thang}: {tong:,.0f} VNĐ</div>', unsafe
