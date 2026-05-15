@@ -80,7 +80,7 @@ h1 {
 # =========================
 # TITLE
 # =========================
-st.title("🚚 Quản Lý Chi Phí Giao Hàng")
+st.title("🚚 CHI PHÍ GIAO HÀNG")
 
 
 # =========================
@@ -164,7 +164,7 @@ df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang]
 # =========================
 # TABLE CUSTOM (STT = 1)
 # =========================
-st.subheader("📦 Chi tiết giao dịch")
+st.subheader("Chi tiết giao dịch")
 
 tong = int(df_f["Phí (VNĐ)"].sum())
 
