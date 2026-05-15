@@ -231,18 +231,25 @@ st.markdown("""
 # =========================
 # ROWS
 # =========================
-for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
+for idx, (_, row) in enumerate(df_f.iterrows(), start=1):
 
-    ngay_txt = row["Ngày"].strftime("%d/%m/%Y") if not pd.isna(row["Ngày"]) else ""
+    ngay = row["Ngày"].strftime("%d/%m/%Y") if not pd.isna(row["Ngày"]) else ""
 
     st.markdown(f"""
-    <div class="row">
-        <div class="col-small">{idx}</div>
-        <div class="col">{ngay_txt}</div>
-        <div class="col">{row['Nội dung']}</div>
-        <div class="col">{row['Đơn vị']}</div>
-        <div class="col"><b>{row['Phí (VNĐ)']:,}</b></div>
-        <div class="col-small">
+    <div style="
+        display:flex;
+        padding:10px 0;
+        border-bottom:1px solid #e6e6e6;
+        font-size:15px;
+    ">
+        <div style="width:6%">{idx}</div>
+        <div style="width:14%">{ngay}</div>
+        <div style="width:40%">{row['Nội dung']}</div>
+        <div style="width:20%">{row['Đơn vị']}</div>
+        <div style="width:20%; font-weight:bold;">
+            {row['Phí (VNĐ)']:,} VNĐ
+        </div>
+    </div>
     """, unsafe_allow_html=True)
 
     if st.button("Xoá", key=f"del_{i}"):
