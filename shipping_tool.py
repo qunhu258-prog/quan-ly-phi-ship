@@ -21,7 +21,8 @@ ngay_hien_tai = f"{thu}, ngày {now.strftime('%d/%m/%Y')}"
 
 gio = now.hour
 if 6 <= gio < 17:
-    thoi_tiet = "Trời đang nắng đẹp ☀️ - Vui vẻ lên nhé 🐻"
+    thoi_tiet = "Trời đang nắng đẹp ☀️
+		 Vui vẻ lên nhé 🐻"
 elif 17 <= gio < 19:
     thoi_tiet = "Hoàng hôn lãng mạn 🌇"
 else:
