@@ -21,7 +21,7 @@ st.markdown("""
     max-width: 100%;
 }
 
-/* HEADER */
+/* HEADER STICKY */
 .header-row {
     display: flex;
     font-weight: bold;
@@ -39,7 +39,6 @@ st.markdown("""
     display: flex;
     padding: 10px 8px;
     border-bottom: 1px solid #eee;
-    transition: 0.2s;
     align-items: center;
 }
 
@@ -48,8 +47,8 @@ st.markdown("""
     background: #f3f6ff;
 }
 
-/* FIX KHÔNG XUỐNG DÒNG */
-.row div {
+/* KHÔNG XUỐNG DÒNG */
+.c1,.c2,.c3,.c4,.c5,.c6 {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -63,12 +62,15 @@ st.markdown("""
 .c5 { width: 15%; }
 .c6 { width: 5%; }
 
-/* DELETE BUTTON */
-button[kind="secondary"] {
-    background: #ff4b4b;
-    color: white;
+/* BUTTON XOÁ (KHÔNG ĐỎ) */
+button {
+    background: #f3f4f6 !important;
+    color: black !important;
+    border: 1px solid #ddd !important;
+    border-radius: 6px !important;
 }
 
+/* TOTAL */
 .total-box {
     padding: 18px;
     border-radius: 15px;
@@ -130,13 +132,17 @@ st.title("🚚 QUẢN LÝ CHI PHÍ GIAO HÀNG")
 
 
 # =========================
-# SIDEBAR (giữ đơn vị)
+# SESSION STATE
 # =========================
 if "ds_donvi" not in st.session_state:
     st.session_state.ds_donvi = ["Ahamove 🛵", "Grab 🚗", "Lalamove 🚛", "GHTK 📦"]
 
+
+# =========================
+# SIDEBAR
+# =========================
 with st.sidebar:
-    st.header("⚙️ Đơn vị")
+    st.header("⚙️ Đơn vị vận chuyển")
 
     new = st.text_input("Thêm đơn vị")
 
@@ -188,7 +194,7 @@ df = pd.DataFrame(data[1:], columns=data[0])
 
 
 # =========================
-# CLEAN
+# CLEAN MONEY
 # =========================
 def clean_money(x):
     return int(re.sub(r"[^\d]", "", str(x)) or 0)
@@ -208,7 +214,7 @@ df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang]
 
 
 # =========================
-# HEADER TABLE
+# HEADER
 # =========================
 st.markdown("""
 <div class="header-row">
@@ -237,14 +243,14 @@ for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
     c4.markdown(f"<div class='row c4'>{row['Đơn vị']}</div>", unsafe_allow_html=True)
     c5.markdown(f"<div class='row c5'><b>{row['Phí (VNĐ)']:,}</b></div>", unsafe_allow_html=True)
 
-    if c6.button("❌", key=f"del_{i}"):
+    if c6.button("Xoá", key=f"del_{i}"):
         ws.delete_rows(i + 2)
         st.cache_resource.clear()
         st.rerun()
 
 
 # =========================
-# TOTAL ONLY
+# TOTAL
 # =========================
 tong = int(df_f["Phí (VNĐ)"].sum())
 
