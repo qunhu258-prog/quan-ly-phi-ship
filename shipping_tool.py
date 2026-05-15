@@ -9,8 +9,12 @@ from datetime import datetime
 @st.cache_resource
 def get_conn():
     try:
-        s = st.secrets
-
+    sh = gc.open_by_key("1pX1uImwD770upHdJ4OKNzYxwKxd5qVeI2zQeW0SBLUg")
+    st.write("✅ Đã mở Google Sheet thành công")
+except Exception as e:
+    st.error("❌ Lỗi khi mở Google Sheet")
+    st.exception(e)
+    st.stop()
         creds_dict = {
             "type": s["type"],
             "project_id": s["project_id"],
