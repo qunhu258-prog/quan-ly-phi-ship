@@ -29,7 +29,7 @@ else:
     thoi_tiet = "Trời đêm mát mẻ ✨"
 
 # =========================
-# 3. STYLE CSS TỔNG HỢP (SỬA LỖI KHOẢNG TRẮNG TRÊN CÙNG KHI IN)
+# 3. STYLE CSS TỔNG HỢP (SỬA TRIỆT ĐỂ LỀ TRÊN KHI IN)
 # =========================
 st.markdown("""
 <style>
@@ -88,10 +88,15 @@ st.markdown("""
     @media print {
         @page {
             size: landscape;
-            margin: 5mm 10mm 10mm 10mm; /* Giảm hẳn lề trên xuống còn 5mm */
+            margin: 0 !important; /* Xóa bỏ lề mặc định của trình duyệt để loại bỏ khoảng trống thừa */
         }
         
-        /* Ẩn các thành phần không liên quan */
+        body {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        /* Ẩn tất cả các thành phần giao diện không liên quan */
         section[data-testid="stSidebar"], 
         div[data-testid="stForm"], 
         div.stSelectbox,
@@ -100,14 +105,17 @@ st.markdown("""
         h1,
         iframe,
         [data-testid="stHeader"],
-        div.stButton { 
+        div.stButton,
+        div[data-testid="stElementContainer"] button { 
             display: none !important; 
         }
         
-        /* TRIỆT TIÊU TOÀN BỘ KHOẢNG TRẮNG PHÍA TRÊN CỦA STREAMLIT */
+        /* ĐẨY NỘI DUNG LÊN TRÊN CÙNG TRANG IN */
         .main, .main .block-container, [data-testid="stMainBlockContainer"] {
-            padding-top: 0px !important;
-            margin-top: 0px !important;
+            padding-top: 10mm !important; /* Tạo lề trên cố định nhỏ gọn */
+            padding-left: 15mm !important;
+            padding-right: 15mm !important;
+            margin: 0px !important;
             top: 0px !important;
         }
 
@@ -251,7 +259,7 @@ thang = st.selectbox("📅 Chọn tháng hiển thị", months)
 df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang]
 df_f = df_f.sort_values(by="Ngày", ascending=True)
 
-# --- SỬA LỖI BẤM ĐƯỢC NHIỀU LẦN VỚI PHƯƠNG PHÁP CHUYỂN ĐỔI STATE ---
+# --- NÚT IN CƠ BẢN (NHẤN IN XONG F5 ĐỂ IN TIẾP LẦN SAU) ---
 st.write(" ")
 if st.button("🖨️ In bảng tính tháng này"):
     components.html("""
@@ -259,8 +267,6 @@ if st.button("🖨️ In bảng tính tháng này"):
             window.parent.print();
         </script>
     """, height=0)
-    # Tự động reload nhẹ chạy ngầm để xóa trạng thái cũ, giúp nút bấm sẵn sàng cho lần tiếp theo
-    st.session_state["print_triggered"] = True
 
 # ========================================================
 # 7. HIỂN THỊ BẢNG DỮ LIỆU
@@ -278,7 +284,7 @@ h6.markdown('<div class="header-col header-right">Xóa</div>', unsafe_allow_html
 for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
     ngay_txt = row["Ngày"].strftime("%d/%m/%Y") if not pd.isna(row["Ngày"]) else ""
     c1, c2, c3, c4, c5, c6 = st.columns([1, 2.5, 7, 3, 3, 1.5])
-    c1.markdown(f"<div class='row-style'>{idx}</div>", unsafe_allow_html=True)
+    c1.markdown(f"<div class='row-style'>{idx}</div>", unsafe_allow_style=True)
     c2.markdown(f"<div class='row-style'>{ngay_txt}</div>", unsafe_allow_html=True)
     c3.markdown(f"<div class='row-style' style='text-align:left; justify-content:flex-start; padding-left:10px;'>{row['Nội dung']}</div>", unsafe_allow_html=True)
     c4.markdown(f"<div class='row-style'>{row['Đơn vị']}</div>", unsafe_allow_html=True)
