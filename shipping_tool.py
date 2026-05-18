@@ -140,7 +140,7 @@ with st.sidebar:
     else:
         list_tu_sheet = []
 
-    mac_dinh = ["Ahamove 🛵", "Grab 🚗", "Lalamove 🚛", "GHTK 📦"]
+    mac_dinh = ["Ahamove", "Grab", "Lalamove", "GHTK", "GHN", "Viettel Post"]
     if "ds_donvi" not in st.session_state:
         st.session_state.ds_donvi = list(set(mac_dinh + list_tu_sheet))
 
@@ -185,7 +185,7 @@ df["Phí (VNĐ)"] = df["Phí (VNĐ)"].apply(lambda x: int(re.sub(r"[^\d]", "", s
 df["Ngày"] = pd.to_datetime(df["Ngày"], format="%d/%m/%Y", errors="coerce")
 months = sorted(df["Ngày"].dt.strftime("%m/%Y").dropna().unique(), reverse=True)
 
-thang = st.selectbox("📅 Chọn tháng hiển thị", months)
+thang = st.selectbox("📅 Chọn tháng", months)
 
 df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang]
 df_f = df_f.sort_values(by="Ngày", ascending=True)
@@ -197,7 +197,7 @@ st.write(" ")
 btn_c1, btn_c2, btn_c3 = st.columns([1.5, 2, 8])
 
 with btn_c1:
-    if st.button("🖨️ In trực tiếp"):
+    if st.button("🖨️ In đây nè bé ưi"):
         components.html("<script>window.parent.print();</script>", height=0)
 
 with btn_c2:
@@ -235,7 +235,7 @@ with btn_c2:
         </head>
         <body>
             <div class="title-container">
-                <h1 class="print-title">BẢNG CHI TIẾT CHI PHÍ GIAO HÀNG - THÁNG {month_txt}</h1>
+                <h1 class="print-title">CHI PHÍ GIAO HÀNG - THÁNG {month_txt}</h1>
             </div>
             <table style="padding: 0 10px;">
                 <thead>
@@ -252,7 +252,7 @@ with btn_c2:
                 </tbody>
             </table>
             <div style="padding: 0 10px;">
-                <div class="total-box">💰 TỔNG CHI PHÍ THÁNG {month_txt}: {total_amount:,.0f} VNĐ</div>
+                <div class="total-box">💰 TỔNG CỘNG: {total_amount:,.0f} VNĐ</div>
             </div>
         </body>
         </html>
