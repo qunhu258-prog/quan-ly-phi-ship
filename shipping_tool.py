@@ -12,9 +12,9 @@ from google.oauth2.service_account import Credentials
 st.set_page_config(layout="wide", page_title="Quản lý phí Ship")
 
 # =========================
-# 2. TIỆN ÍCH SIDEBAR (NGÀY & THỜI TIẾT)
+# 2. TIỆN ÍCH SIDEBAR (NGÀY & THỜI TIẾT) - ĐÃ FIX MÚI GIỜ VN
 # =========================
-now = datetime.datetime.now() + datetime.timedelta(hours=7)
+now = datetime.datetime.utcnow() + datetime.timedelta(hours=7)
 thu_tieng_viet = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"]
 thu = thu_tieng_viet[now.weekday()]
 ngay_hien_tai = f"{thu}, ngày {now.strftime('%d/%m/%Y')}"
@@ -28,7 +28,7 @@ else:
     thoi_tiet = "Trời đêm mát mẻ ✨"
 
 # =========================
-# 3. STYLE CSS TỔNG HỢP (MÀU CHỦ ĐẠO #5B7E3C)
+# 3. STYLE CSS TỔNG HỢP (TỐI ƯU CHỈ IN RIÊNG BẢNG DỮ LIỆU)
 # =========================
 st.markdown("""
 <style>
@@ -79,6 +79,74 @@ st.markdown("""
         background-color: #5B7E3C !important;
         color: white !important;
     }
+
+    /* =========================================
+       CẤU HÌNH IN ẤN CAO CẤP (ẨN TOÀN BỘ CHỈ IN BẢNG)
+       ========================================= */
+    @media print {
+        /* Ép buộc khổ giấy ngang và xóa lề thừa của trình duyệt */
+        @page {
+            size: landscape;
+            margin: 10mm;
+        }
+        
+        /* Ẩn TOÀN BỘ các thành phần mặc định của giao diện Streamlit */
+        body *,  
+        header, 
+        footer, 
+        section[data-testid="stSidebar"], 
+        div[data-testid="stForm"],
+        div.stSelectbox,
+        .print-button,
+        h1 { 
+            display: none !important; 
+        }
+        
+        /* CHỈ HIỂN THỊ duy nhất vùng chứa bảng dữ liệu tháng */
+        #vung-in-du-lieu, #vung-in-du-lieu * {
+            display: block !important;
+        }
+
+        /* Ẩn riêng cột XÓA (Cột thứ 6) nằm trong vùng in */
+        #vung-in-du-lieu div[data-testid="stHorizontalBlock"] > div:nth-child(6) {
+            display: none !important;
+        }
+        
+        /* Định dạng lại các dòng hiển thị bằng flex khi in để không bị vỡ hàng */
+        #vung-in-du-lieu div[data-testid="stHorizontalBlock"] {
+            display: flex !important;
+            flex-direction: row !important;
+            width: 100% !important;
+            gap: 0px !important;
+        }
+
+        /* Căn chỉnh tỷ lệ các cột cho khít trang giấy ngang sau khi ẩn cột xóa */
+        #vung-in-du-lieu div[data-testid="stHorizontalBlock"] > div:nth-child(1) { width: 6% !important; max-width: 6% !important; flex: 0 0 6% !important; }
+        #vung-in-du-lieu div[data-testid="stHorizontalBlock"] > div:nth-child(2) { width: 14% !important; max-width: 14% !important; flex: 0 0 14% !important; }
+        #vung-in-du-lieu div[data-testid="stHorizontalBlock"] > div:nth-child(3) { width: 50% !important; max-width: 50% !important; flex: 0 0 50% !important; }
+        #vung-in-du-lieu div[data-testid="stHorizontalBlock"] > div:nth-child(4) { width: 15% !important; max-width: 15% !important; flex: 0 0 15% !important; }
+        #vung-in-du-lieu div[data-testid="stHorizontalBlock"] > div:nth-child(5) { 
+            width: 15% !important; max-width: 15% !important; flex: 0 0 15% !important;
+            border-right: none !important;
+        }
+
+        /* Bo lại góc phải bảng cho cột Phí khi in */
+        #vung-in-du-lieu div[data-testid="stHorizontalBlock"]:has(.header-col) > div:nth-child(5) .header-col {
+            border-radius: 0 8px 0 0 !important;
+        }
+
+        /* Làm gọn cỡ chữ để in ra nét và đẹp */
+        .row-style, .header-col {
+            font-size: 15px !important;
+            padding: 6px 2px !important;
+        }
+        
+        /* Xóa bỏ khoảng trắng bao quanh của Streamlit khi in */
+        .main .block-container {
+            padding: 0 !important;
+            max-width: 100% !important;
+        }
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -123,7 +191,6 @@ with st.sidebar:
 
     st.header("⚙️ Cài đặt")
     
-    # Tự động lấy danh sách ĐVVC từ dữ liệu cũ trên Sheet
     data_all = ws.get_all_values()
     if len(data_all) > 1:
         df_all = pd.DataFrame(data_all[1:], columns=data_all[0])
@@ -131,9 +198,7 @@ with st.sidebar:
     else:
         list_tu_sheet = []
 
-    mac_dinh = ["Ahamove", "Grab", "Lalamove", "GHTK", "GHN", "Viettel Post"]
-    
-    # Kết hợp danh sách mặc định và danh sách từ sheet
+    mac_dinh = ["Ahamove 🛵", "Grab 🚗", "Lalamove 🚛", "GHTK 📦"]
     if "ds_donvi" not in st.session_state:
         st.session_state.ds_donvi = list(set(mac_dinh + list_tu_sheet))
 
@@ -177,16 +242,37 @@ df = pd.DataFrame(data[1:], columns=data[0])
 df["Phí (VNĐ)"] = df["Phí (VNĐ)"].apply(lambda x: int(re.sub(r"[^\d]", "", str(x)) or 0))
 df["Ngày"] = pd.to_datetime(df["Ngày"], format="%d/%m/%Y", errors="coerce")
 months = sorted(df["Ngày"].dt.strftime("%m/%Y").dropna().unique(), reverse=True)
-thang = st.selectbox("📅 Chọn tháng hiển thị", months)
-# Lọc theo tháng đã chọn
-df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang]
 
-# --- BƯỚC THÊM MỚI: Sắp xếp ngày tăng dần (cũ đến mới, ngày 4 sẽ tự lên trên ngày 6) ---
+# Khối chọn tháng hiển thị
+thang = st.selectbox("📅 Chọn tháng hiển thị", months)
+
+# Lọc và sắp xếp ngày tăng dần
+df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang]
 df_f = df_f.sort_values(by="Ngày", ascending=True)
 
-# =========================
-# 7. HIỂN THỊ BẢNG (Màu xanh lá #5B7E3C)
-# =========================
+# --- NÚT BẤM KÍCH HOẠT LỆNH IN MÁY TÍNH ---
+st.markdown("""
+    <div class="print-button" style="text-align: right; margin-bottom: 15px;">
+        <button onclick="window.print()" style="
+            background-color: #5B7E3C; color: white; border: none; 
+            padding: 10px 20px; font-size: 16px; font-weight: bold;
+            border-radius: 8px; cursor: pointer; display: inline-flex; 
+            align-items: center; gap: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        ">
+            🖨️ In bảng tính tháng này
+        </button>
+    </div>
+""", unsafe_allow_html=True)
+
+# ========================================================
+# 7. KHU VỰC CHỨA BẢNG ĐỂ IN (Được bọc trong thẻ div id="vung-in-du-lieu")
+# ========================================================
+st.markdown('<div id="vung-in-du-lieu">', unsafe_allow_html=True)
+
+# --- Tiêu đề phụ xuất hiện KHI IN để biết là in của tháng nào ---
+st.markdown(f'<h2 class="print-only-title" style="color: #5B7E3C; text-align: center; margin-bottom: 20px;">BẢNG CHI TIẾT CHI PHÍ GIAO HÀNG - THÁNG {thang}</h2>', unsafe_allow_html=True)
+
+# Vẽ Header cho bảng
 h1, h2, h3, h4, h5, h6 = st.columns([1, 2.5, 7, 3, 3, 1.5])
 h1.markdown('<div class="header-col header-left">STT</div>', unsafe_allow_html=True)
 h2.markdown('<div class="header-col">Ngày</div>', unsafe_allow_html=True)
@@ -195,6 +281,7 @@ h4.markdown('<div class="header-col">ĐVVC</div>', unsafe_allow_html=True)
 h5.markdown('<div class="header-col">Phí</div>', unsafe_allow_html=True)
 h6.markdown('<div class="header-col header-right">Xóa</div>', unsafe_allow_html=True)
 
+# Vòng lặp in các dòng dữ liệu
 for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
     ngay_txt = row["Ngày"].strftime("%d/%m/%Y") if not pd.isna(row["Ngày"]) else ""
     c1, c2, c3, c4, c5, c6 = st.columns([1, 2.5, 7, 3, 3, 1.5])
@@ -210,8 +297,8 @@ for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
             st.rerun()
     st.markdown('<hr style="margin:0; border:0.5px solid #f1f4ef;">', unsafe_allow_html=True)
 
-# =========================
-# 8. TỔNG CỘNG (Màu xanh lá đồng bộ)
-# =========================
+# Tính tổng chi phí và hiển thị dải Tổng cộng nằm trong vùng in luôn
 tong = int(df_f["Phí (VNĐ)"].sum())
 st.markdown(f'<div class="total-box">💰 TỔNG CHI PHÍ THÁNG {thang}: {tong:,.0f} VNĐ</div>', unsafe_allow_html=True)
+
+st.markdown('</div>', unsafe_allow_html=True) # Đóng khu vực vung-in-du-lieu
