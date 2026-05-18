@@ -29,7 +29,7 @@ else:
     thoi_tiet = "Trời đêm mát mẻ ✨"
 
 # =========================
-# 3. STYLE CSS TỔNG HỢP
+# 3. STYLE CSS TỔNG HỢP GIAO DIỆN WEB
 # =========================
 st.markdown("""
 <style>
@@ -191,52 +191,51 @@ df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang]
 df_f = df_f.sort_values(by="Ngày", ascending=True)
 
 # ========================================================
-# 6.5. KHU VỰC CHỨC NĂNG XUẤT BÁO CÁO (PRINT & PDF)
+# 6.5. KHU VỰC ĐẶT NÚT SONG SONG (IN TRỰC TIẾP & XUẤT PDF)
 # ========================================================
 st.write(" ")
-btn_c1, btn_c2 = st.columns([1, 4])
+btn_c1, btn_c2, btn_c3 = st.columns([1.5, 2, 8])
 
 with btn_c1:
     if st.button("🖨️ In trực tiếp"):
         components.html("<script>window.parent.print();</script>", height=0)
 
 with btn_c2:
-    # Hàm tự động biên dịch cấu trúc HTML sang định dạng PDF tải về
-    def tao_giao_dien_html_pdf(dataframe, month_txt, total_amount):
+    # Hàm thiết kế cấu trúc HTML full chiều rộng (bỏ chữ phụ) để lưu file
+    def tao_giao_dien_html_full_width(dataframe, month_txt, total_amount):
         rows_html = ""
         for idx, (_, r) in enumerate(dataframe.iterrows(), start=1):
             d_txt = r["Ngày"].strftime("%d/%m/%Y") if not pd.isna(r["Ngày"]) else ""
             rows_html += f"""
             <tr>
-                <td style='text-align: center;'>{idx}</td>
-                <td style='text-align: center;'>{d_txt}</td>
-                <td style='text-align: left; padding-left: 12px;'>{r['Nội dung']}</td>
-                <td style='text-align: center;'>{r['Đơn vị']}</td>
-                <td style='text-align: right; padding-right: 15px; font-weight: bold;'>{r['Phí (VNĐ)']:,}</td>
+                <td style='text-align: center; width: 6%;'>{idx}</td>
+                <td style='text-align: center; width: 14%;'>{d_txt}</td>
+                <td style='text-align: left; padding-left: 12px; width: 50%;'>{r['Nội dung']}</td>
+                <td style='text-align: center; width: 15%;'>{r['Đơn vị']}</td>
+                <td style='text-align: right; padding-right: 15px; font-weight: bold; width: 15%;'>{r['Phí (VNĐ)']:,}</td>
             </tr>
             """
         
         html_template = f"""
+        <!DOCTYPE html>
         <html>
         <head>
             <meta charset="utf-8">
             <style>
-                @page {{ size: A4 landscape; margin: 12mm 15mm; }}
-                body {{ font-family: 'Helvetica Neue', Arial, sans-serif; color: #333; }}
-                .title-container {{ text-align: center; margin-bottom: 25px; }}
-                .print-title {{ color: #5B7E3C; font-size: 20pt; font-weight: bold; margin: 0; text-transform: uppercase; }}
-                .sub-title {{ color: #666; font-size: 11pt; margin-top: 5px; font-style: italic; }}
-                table {{ width: 100%; border-collapse: collapse; margin-bottom: 25px; }}
-                th {{ background-color: #5B7E3C; color: white; font-weight: bold; font-size: 11pt; padding: 10px 6px; border: 1px solid #5B7E3C; }}
-                td {{ padding: 10px 6px; font-size: 10.5pt; border-bottom: 1px solid #eef2ec; color: #444; vertical-align: middle; }}
+                @page {{ size: landscape; margin: 5mm 5mm; }}
+                body {{ font-family: 'Helvetica Neue', Arial, sans-serif; color: #333; margin: 0; padding: 0; width: 100%; }}
+                .title-container {{ text-align: center; margin-bottom: 20px; width: 100%; }}
+                .print-title {{ color: #5B7E3C; font-size: 22pt; font-weight: bold; margin: 0; text-transform: uppercase; }}
+                table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; }}
+                th {{ background-color: #5B7E3C; color: white; font-weight: bold; font-size: 12pt; padding: 12px 6px; border: 1px solid #5B7E3C; }}
+                td {{ padding: 12px 6px; font-size: 11pt; border-bottom: 1px solid #eef2ec; color: #444; vertical-align: middle; }}
                 tr:nth-child(even) td {{ background-color: #fcfdfe; }}
-                .total-box {{ padding: 15px; border-radius: 10px; font-size: 14pt; font-weight: bold; text-align: center; background-color: #5B7E3C; color: white; margin-top: 15px; }}
+                .total-box {{ padding: 18px; border-radius: 10px; font-size: 15pt; font-weight: bold; text-align: center; background-color: #5B7E3C; color: white; margin-top: 15px; width: 100%; box-sizing: border-box; }}
             </style>
         </head>
         <body>
             <div class="title-container">
-                <h1 class="print-title">BẢNG CHI TIẾT CHI PHÍ GIAO HÀNG</h1>
-                <div class="sub-title">Tháng {month_txt} — Hệ thống quản lý thông minh</div>
+                <h1 class="print-title">BẢNG CHI TIẾT CHI PHÍ GIAO HÀNG - THÁNG {month_txt}</h1>
             </div>
             <table>
                 <thead>
@@ -259,9 +258,8 @@ with btn_c2:
         return html_template
 
     tong_tien = int(df_f["Phí (VNĐ)"].sum())
-    dulieu_html = tao_giao_dien_html_pdf(df_f, thang, tong_tien)
+    dulieu_html = tao_giao_dien_html_full_width(df_f, thang, tong_tien)
     
-    # Nút bấm tải file trực tiếp tích hợp sẵn trên Streamlit
     st.download_button(
         label="📥 Xuất file PDF",
         data=dulieu_html,
