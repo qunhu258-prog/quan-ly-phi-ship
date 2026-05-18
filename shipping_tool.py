@@ -246,7 +246,7 @@ df["Phí (VNĐ)"] = df["Phí (VNĐ)"].apply(lambda x: int(re.sub(r"[^\d]", "", s
 df["Ngày"] = pd.to_datetime(df["Ngày"], format="%d/%m/%Y", errors="coerce")
 months = sorted(df["Ngày"].dt.strftime("%m/%Y").dropna().unique(), reverse=True)
 
-thang = st.selectbox("📅 Chọn tháng hiển thị", months)
+thang = st.selectbox("📅 Chọn tháng", months)
 
 df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang]
 df_f = df_f.sort_values(by="Ngày", ascending=True)
@@ -254,7 +254,7 @@ df_f = df_f.sort_values(by="Ngày", ascending=True)
 # --- NÚT BẤM HTML CHUẨN: KHÔNG DÙNG STATE STREAMLIT - IN LIÊN TỤC VÔ TƯ ---
 st.markdown("""
     <div class="no-print" style="margin: 20px 0;">
-        <button onclick="window.print();" style="
+        <button onclick="window.parent.print();" style="
             background-color: white; 
             color: #5B7E3C; 
             border: 1px solid #5B7E3C; 
