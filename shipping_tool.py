@@ -131,7 +131,7 @@ with st.sidebar:
     else:
         list_tu_sheet = []
 
-    mac_dinh = ["Ahamove 🛵", "Grab 🚗", "Lalamove 🚛", "GHTK 🚐", "GHN 🏍", "Viettel Post 📦"]
+    mac_dinh = ["Ahamove", "Grab", "Lalamove", "GHTK", "GHN", "Viettel Post"]
     
     # Kết hợp danh sách mặc định và danh sách từ sheet
     if "ds_donvi" not in st.session_state:
