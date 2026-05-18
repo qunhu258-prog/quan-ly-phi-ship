@@ -29,7 +29,7 @@ else:
     thoi_tiet = "Trời đêm mát mẻ ✨"
 
 # =========================
-# 3. STYLE CSS TỔNG HỢP (FIX LỖI IN TRỐNG TRƠN)
+# 3. STYLE CSS TỔNG HỢP (SỬA LỖI LỀ TRÊN & ẨN NÚT HTML KHI IN)
 # =========================
 st.markdown("""
 <style>
@@ -88,10 +88,10 @@ st.markdown("""
     @media print {
         @page {
             size: landscape;
-            margin: 10mm;
+            margin: 5mm 10mm 10mm 10mm; /* Ép sát lề trên 5mm */
         }
         
-        /* Ẩn các thành phần không liên quan */
+        /* Ẩn toàn bộ các phần giao diện phụ bao gồm cả nút In bằng HTML */
         section[data-testid="stSidebar"], 
         div[data-testid="stForm"], 
         div.stSelectbox,
@@ -99,24 +99,17 @@ st.markdown("""
         footer,
         h1,
         iframe,
-        [data-testid="stHeader"] { 
+        [data-testid="stHeader"],
+        div.stButton,
+        .no-print { 
             display: none !important; 
         }
         
-        /* Đảm bảo khối nội dung chính không bị ẩn sập */
-        .main, .main .block-container {
-            visibility: visible !important;
-            padding: 0 !important;
-            margin: 0 !important;
-        }
-
-        /* Ẩn riêng nút bấm In trên trang giấy */
-        div.stButton:data-testid="stElementContainer" button:has(div:contains("In bảng tính")) {
-            display: none !important;
-        }
-        /* Cách phụ để ẩn nút in an toàn */
-        .stButton button {
-            display: none !important;
+        /* TRIỆT TIÊU TOÀN BỘ KHOẢNG TRẮNG ĐỆM PHÍA TRÊN CỦA STREAMLIT */
+        .main, .main .block-container, [data-testid="stMainBlockContainer"] {
+            padding-top: 0px !important;
+            margin-top: 0px !important;
+            top: 0px !important;
         }
 
         /* Hiện tiêu đề in chuyên nghiệp */
@@ -124,12 +117,13 @@ st.markdown("""
             display: block !important;
             color: #5B7E3C !important;
             text-align: center !important;
+            margin-top: 0px !important;
             margin-bottom: 25px !important;
             font-size: 24px !important;
             font-weight: bold !important;
         }
 
-        /* Khôi phục lại hiển thị cho bảng và nút xóa sẽ bị ẩn */
+        /* Định dạng lại bảng dòng để không bị lệch form */
         div[data-testid="stHorizontalBlock"] {
             display: flex !important;
             flex-direction: row !important;
@@ -137,7 +131,7 @@ st.markdown("""
             gap: 0px !important;
         }
 
-        /* Ẩn cột Xóa (cột số 6) và nút Xóa bên trong dòng */
+        /* Ẩn cột Xóa (cột số 6) */
         div[data-testid="stHorizontalBlock"] > div:nth-child(6) {
             display: none !important;
         }
@@ -208,7 +202,7 @@ with st.sidebar:
     else:
         list_tu_sheet = []
 
-    mac_dinh = ["Ahamove", "Grab", "Lalamove", "GHTK", "GHN", "Viettel Post"]
+    mac_dinh = ["Ahamove 🛵", "Grab 🚗", "Lalamove 🚛", "GHTK 📦"]
     if "ds_donvi" not in st.session_state:
         st.session_state.ds_donvi = list(set(mac_dinh + list_tu_sheet))
 
@@ -253,24 +247,36 @@ df["Phí (VNĐ)"] = df["Phí (VNĐ)"].apply(lambda x: int(re.sub(r"[^\d]", "", s
 df["Ngày"] = pd.to_datetime(df["Ngày"], format="%d/%m/%Y", errors="coerce")
 months = sorted(df["Ngày"].dt.strftime("%m/%Y").dropna().unique(), reverse=True)
 
-thang = st.selectbox("📅 Chọn tháng", months)
+thang = st.selectbox("📅 Chọn tháng hiển thị", months)
 
 df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang]
 df_f = df_f.sort_values(by="Ngày", ascending=True)
 
-# Nút kích hoạt lệnh in hệ thống
-st.write(" ")
-if st.button("🖨️ In ở đây bé ưi"):
-    components.html("""
-        <script>
-            window.parent.print();
-        </script>
-    """, height=0)
+# --- SỬA LỖI IN NHIỀU LẦN: DÙNG NÚT BẤM HTML THUỒN THAY VÌ ST.BUTTON ---
+st.markdown("""
+    <div class="no-print" style="margin: 20px 0;">
+        <button onclick="window.print();" style="
+            background-color: white; 
+            color: #5B7E3C; 
+            border: 1px solid #5B7E3C; 
+            padding: 8px 16px; 
+            font-size: 16px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px;
+            transition: all 0.3s;
+        " onmouseover="this.style.backgroundColor='#5B7E3C'; this.style.color='white';" onmouseout="this.style.backgroundColor='white'; this.style.color='#5B7E3C';">
+            🖨️ In bảng tính tháng này
+        </button>
+    </div>
+""", unsafe_allow_html=True)
 
 # ========================================================
 # 7. HIỂN THỊ BẢNG DỮ LIỆU
 # ========================================================
-st.markdown(f'<div class="print-title">CHI PHÍ GIAO HÀNG - THÁNG {thang}</div>', unsafe_allow_html=True)
+st.markdown(f'<div class="print-title">BẢNG CHI TIẾT CHI PHÍ GIAO HÀNG - THÁNG {thang}</div>', unsafe_allow_html=True)
 
 h1, h2, h3, h4, h5, h6 = st.columns([1, 2.5, 7, 3, 3, 1.5])
 h1.markdown('<div class="header-col header-left">STT</div>', unsafe_allow_html=True)
@@ -289,7 +295,6 @@ for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
     c4.markdown(f"<div class='row-style'>{row['Đơn vị']}</div>", unsafe_allow_html=True)
     c5.markdown(f"<div class='row-style'><b>{row['Phí (VNĐ)']:,}</b></div>", unsafe_allow_html=True)
     with c6:
-        # Nút xóa này sẽ tự động ẩn đi nhờ CSS @media print
         if st.button("❌", key=f"del_{i}"):
             ws.delete_rows(i + 2)
             st.cache_resource.clear()
