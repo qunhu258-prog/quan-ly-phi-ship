@@ -14,7 +14,7 @@ st.set_page_config(layout="wide", page_title="Quản lý phí Ship")
 # =========================
 # 2. TIỆN ÍCH SIDEBAR (NGÀY & THỜI TIẾT)
 # =========================
-now = datetime.datetime.now()
+now = datetime.datetime.now() + datetime.timedelta(hours=7)
 thu_tieng_viet = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"]
 thu = thu_tieng_viet[now.weekday()]
 ngay_hien_tai = f"{thu}, ngày {now.strftime('%d/%m/%Y')}"
