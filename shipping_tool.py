@@ -13,7 +13,7 @@ import streamlit.components.v1 as components
 st.set_page_config(layout="wide", page_title="Quản lý phí Ship")
 
 # =========================
-# 2. TIỆN ÍCH SIDEBAR (NGÀY & THỜI TIẾT) - ĐÃ FIX MÚI GIỜ VN
+# 2. TIỆN ÍCH SIDEBAR (NGÀY & THỜI TIẾT)
 # =========================
 now = datetime.datetime.utcnow() + datetime.timedelta(hours=7)
 thu_tieng_viet = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"]
@@ -29,22 +29,16 @@ else:
     thoi_tiet = "Trời đêm mát mẻ ✨"
 
 # =========================
-# 3. STYLE CSS TỔNG HỢP (SỬA TRIỆT ĐỂ LỀ TRÊN KHI IN)
+# 3. STYLE CSS TỔNG HỢP
 # =========================
 st.markdown("""
 <style>
     .block-container { padding: 2rem 3rem; max-width: 100%; }
-    
-    /* Đổi màu tiêu đề st.title */
     h1 { color: #5B7E3C !important; }
-
-    /* Taskbar sidebar */
     .taskbar-box {
         background-color: #f1f4ef; padding: 15px; border-radius: 10px; 
         border-left: 5px solid #5B7E3C; margin-bottom: 20px;
     }
-    
-    /* Header bảng */
     div[data-testid="stHorizontalBlock"]:has(.header-col) { gap: 0px !important; }
     .header-col {
         background-color: #5B7E3C; color: white; font-weight: bold;
@@ -53,14 +47,10 @@ st.markdown("""
     }
     .header-left { border-radius: 8px 0 0 0; }
     .header-right { border-radius: 0 8px 0 0; border-right: none; }
-    
-    /* Nội dung dòng bảng */
     .row-style {
         font-size: 18px; padding: 10px 0; display: flex;
         align-items: center; justify-content: center;
     }
-    
-    /* Tổng cộng tháng */
     .total-box {
         padding: 18px; border-radius: 15px; font-size: 22px;
         font-weight: bold; text-align: center;
@@ -68,8 +58,6 @@ st.markdown("""
         box-shadow: 0 4px 15px rgba(91, 126, 60, 0.3);
         margin-top: 20px;
     }
-
-    /* Đổi màu các nút bấm Streamlit mặc định */
     .stButton > button {
         border-color: #5B7E3C !important;
         color: #5B7E3C !important;
@@ -78,84 +66,30 @@ st.markdown("""
         background-color: #5B7E3C !important;
         color: white !important;
     }
-
-    /* Tiêu đề ẩn trên web, chỉ hiện khi in */
     .print-title { display: none; }
 
-    /* =========================================
-       CSS ĐỊNH DẠNG RIÊNG KHI BẤM IN (PRINT)
-       ========================================= */
     @media print {
-        @page {
-            size: landscape;
-            margin: 0 !important; /* Xóa bỏ lề mặc định của trình duyệt để loại bỏ khoảng trống thừa */
-        }
-        
-        body {
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-
-        /* Ẩn tất cả các thành phần giao diện không liên quan */
-        section[data-testid="stSidebar"], 
-        div[data-testid="stForm"], 
-        div.stSelectbox,
-        header, 
-        footer,
-        h1,
-        iframe,
-        [data-testid="stHeader"],
-        div.stButton,
-        div[data-testid="stElementContainer"] button { 
-            display: none !important; 
-        }
-        
-        /* ĐẨY NỘI DUNG LÊN TRÊN CÙNG TRANG IN */
+        @page { size: landscape; margin: 0 !important; }
+        body { margin: 0 !important; padding: 0 !important; }
+        section[data-testid="stSidebar"], div[data-testid="stForm"], div.stSelectbox,
+        header, footer, h1, iframe, [data-testid="stHeader"], div.stButton,
+        div[data-testid="stElementContainer"] button { display: none !important; }
         .main, .main .block-container, [data-testid="stMainBlockContainer"] {
-            padding-top: 10mm !important; /* Tạo lề trên cố định nhỏ gọn */
-            padding-left: 15mm !important;
-            padding-right: 15mm !important;
-            margin: 0px !important;
-            top: 0px !important;
+            padding-top: 10mm !important; padding-left: 15mm !important; padding-right: 15mm !important;
+            margin: 0px !important; top: 0px !important;
         }
-
-        /* Hiện tiêu đề in chuyên nghiệp */
         .print-title {
-            display: block !important;
-            color: #5B7E3C !important;
-            text-align: center !important;
-            margin-top: 0px !important;
-            margin-bottom: 25px !important;
-            font-size: 24px !important;
-            font-weight: bold !important;
+            display: block !important; color: #5B7E3C !important; text-align: center !important;
+            margin-top: 0px !important; margin-bottom: 25px !important; font-size: 24px !important; font-weight: bold !important;
         }
-
-        /* Định dạng bảng khi in */
-        div[data-testid="stHorizontalBlock"] {
-            display: flex !important;
-            flex-direction: row !important;
-            width: 100% !important;
-            gap: 0px !important;
-        }
-
-        /* Ẩn cột Xóa (cột số 6) */
-        div[data-testid="stHorizontalBlock"] > div:nth-child(6) {
-            display: none !important;
-        }
-
-        /* Ép layout dòng chia tỉ lệ chuẩn khổ giấy ngang */
+        div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; width: 100% !important; gap: 0px !important; }
+        div[data-testid="stHorizontalBlock"] > div:nth-child(6) { display: none !important; }
         div[data-testid="stHorizontalBlock"] > div:nth-child(1) { width: 6% !important; max-width: 6% !important; flex: 0 0 6% !important; }
         div[data-testid="stHorizontalBlock"] > div:nth-child(2) { width: 14% !important; max-width: 14% !important; flex: 0 0 14% !important; }
         div[data-testid="stHorizontalBlock"] > div:nth-child(3) { width: 50% !important; max-width: 50% !important; flex: 0 0 50% !important; }
         div[data-testid="stHorizontalBlock"] > div:nth-child(4) { width: 15% !important; max-width: 15% !important; flex: 0 0 15% !important; }
-        div[data-testid="stHorizontalBlock"] > div:nth-child(5) { 
-            width: 15% !important; max-width: 15% !important; flex: 0 0 15% !important;
-            border-right: none !important;
-        }
-        div[data-testid="stHorizontalBlock"]:has(.header-col) > div:nth-child(5) .header-col {
-            border-radius: 0 8px 0 0 !important;
-        }
-
+        div[data-testid="stHorizontalBlock"] > div:nth-child(5) { width: 15% !important; max-width: 15% !important; flex: 0 0 15% !important; border-right: none !important; }
+        div[data-testid="stHorizontalBlock"]:has(.header-col) > div:nth-child(5) .header-col { border-radius: 0 8px 0 0 !important; }
         .row-style, .header-col { font-size: 15px !important; padding: 6px 2px !important; }
     }
 </style>
@@ -194,14 +128,11 @@ with st.sidebar:
         <hr style="margin: 10px 0; border: 0.5px solid #ddd;">
         <p style="margin:0; font-size: 14px; color: #555;">🌤️ <b>Thời tiết:</b></p>
         <p style="margin:0; font-size: 16px; font-weight: bold;">{thoi_tiet}</p>
-        <p style="margin-top:8px; font-size: 16px; font-weight: bold; color: #5B7E3C;">
-            Vui vẻ lên nhé ✨🐻
-        </p>
+        <p style="margin-top:8px; font-size: 16px; font-weight: bold; color: #5B7E3C;">Vui vẻ lên nhé ✨🐻</p>
     </div>
     ''', unsafe_allow_html=True)
 
     st.header("⚙️ Cài đặt")
-    
     data_all = ws.get_all_values()
     if len(data_all) > 1:
         df_all = pd.DataFrame(data_all[1:], columns=data_all[0])
@@ -259,14 +190,84 @@ thang = st.selectbox("📅 Chọn tháng hiển thị", months)
 df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang]
 df_f = df_f.sort_values(by="Ngày", ascending=True)
 
-# --- NÚT IN CƠ BẢN (NHẤN IN XONG F5 ĐỂ IN TIẾP LẦN SAU) ---
+# ========================================================
+# 6.5. KHU VỰC CHỨC NĂNG XUẤT BÁO CÁO (PRINT & PDF)
+# ========================================================
 st.write(" ")
-if st.button("🖨️ In bảng tính tháng này"):
-    components.html("""
-        <script>
-            window.parent.print();
-        </script>
-    """, height=0)
+btn_c1, btn_c2 = st.columns([1, 4])
+
+with btn_c1:
+    if st.button("🖨️ In trực tiếp"):
+        components.html("<script>window.parent.print();</script>", height=0)
+
+with btn_c2:
+    # Hàm tự động biên dịch cấu trúc HTML sang định dạng PDF tải về
+    def tao_giao_dien_html_pdf(dataframe, month_txt, total_amount):
+        rows_html = ""
+        for idx, (_, r) in enumerate(dataframe.iterrows(), start=1):
+            d_txt = r["Ngày"].strftime("%d/%m/%Y") if not pd.isna(r["Ngày"]) else ""
+            rows_html += f"""
+            <tr>
+                <td style='text-align: center;'>{idx}</td>
+                <td style='text-align: center;'>{d_txt}</td>
+                <td style='text-align: left; padding-left: 12px;'>{r['Nội dung']}</td>
+                <td style='text-align: center;'>{r['Đơn vị']}</td>
+                <td style='text-align: right; padding-right: 15px; font-weight: bold;'>{r['Phí (VNĐ)']:,}</td>
+            </tr>
+            """
+        
+        html_template = f"""
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <style>
+                @page {{ size: A4 landscape; margin: 12mm 15mm; }}
+                body {{ font-family: 'Helvetica Neue', Arial, sans-serif; color: #333; }}
+                .title-container {{ text-align: center; margin-bottom: 25px; }}
+                .print-title {{ color: #5B7E3C; font-size: 20pt; font-weight: bold; margin: 0; text-transform: uppercase; }}
+                .sub-title {{ color: #666; font-size: 11pt; margin-top: 5px; font-style: italic; }}
+                table {{ width: 100%; border-collapse: collapse; margin-bottom: 25px; }}
+                th {{ background-color: #5B7E3C; color: white; font-weight: bold; font-size: 11pt; padding: 10px 6px; border: 1px solid #5B7E3C; }}
+                td {{ padding: 10px 6px; font-size: 10.5pt; border-bottom: 1px solid #eef2ec; color: #444; vertical-align: middle; }}
+                tr:nth-child(even) td {{ background-color: #fcfdfe; }}
+                .total-box {{ padding: 15px; border-radius: 10px; font-size: 14pt; font-weight: bold; text-align: center; background-color: #5B7E3C; color: white; margin-top: 15px; }}
+            </style>
+        </head>
+        <body>
+            <div class="title-container">
+                <h1 class="print-title">BẢNG CHI TIẾT CHI PHÍ GIAO HÀNG</h1>
+                <div class="sub-title">Tháng {month_txt} — Hệ thống quản lý thông minh</div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 6%;">STT</th>
+                        <th style="width: 14%;">Ngày</th>
+                        <th style="width: 50%; text-align: left; padding-left: 12px;">Nội dung</th>
+                        <th style="width: 15%;">ĐVVC</th>
+                        <th style="width: 15%;">Phí (VNĐ)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {rows_html}
+                </tbody>
+            </table>
+            <div class="total-box">💰 TỔNG CHI PHÍ THÁNG {month_txt}: {total_amount:,.0f} VNĐ</div>
+        </body>
+        </html>
+        """
+        return html_template
+
+    tong_tien = int(df_f["Phí (VNĐ)"].sum())
+    dulieu_html = tao_giao_dien_html_pdf(df_f, thang, tong_tien)
+    
+    # Nút bấm tải file trực tiếp tích hợp sẵn trên Streamlit
+    st.download_button(
+        label="📥 Xuất file PDF",
+        data=dulieu_html,
+        file_name=f"Bao_cao_phi_ship_thang_{thang.replace('/', '_')}.html",
+        mime="text/html"
+    )
 
 # ========================================================
 # 7. HIỂN THỊ BẢNG DỮ LIỆU
@@ -299,5 +300,4 @@ for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
 # =========================
 # 8. TỔNG CỘNG
 # =========================
-tong = int(df_f["Phí (VNĐ)"].sum())
-st.markdown(f'<div class="total-box">💰 TỔNG CHI PHÍ THÁNG {thang}: {tong:,.0f} VNĐ</div>', unsafe_allow_html=True)
+st.markdown(f'<div class="total-box">💰 TỔNG CHI PHÍ THÁNG {thang}: {tong_tien:,.0f} VNĐ</div>', unsafe_allow_html=True)
