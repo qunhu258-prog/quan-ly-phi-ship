@@ -272,7 +272,7 @@ with btn_c2:
 # ========================================================
 # 7. HIỂN THỊ BẢNG DỮ LIỆU
 # ========================================================
-st.markdown(f'<div class="print-title">BẢNG CHI TIẾT CHI PHÍ GIAO HÀNG - THÁNG {thang}</div>', unsafe_allow_html=True)
+st.markdown(f'<div class="print-title">CHI PHÍ GIAO HÀNG - THÁNG {thang}</div>', unsafe_allow_html=True)
 
 h1, h2, h3, h4, h5, h6 = st.columns([1, 2.5, 7, 3, 3, 1.5])
 h1.markdown('<div class="header-col header-left">STT</div>', unsafe_allow_html=True)
