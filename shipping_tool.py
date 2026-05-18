@@ -5,14 +5,19 @@ import re
 import datetime
 from datetime import datetime as dt
 from google.oauth2.service_account import Credentials
+import streamlit.components.v1 as components
 
 # =========================
 # 1. CẤU HÌNH TRANG
 # =========================
 st.set_page_config(layout="wide", page_title="Quản lý phí Ship")
 
+# Khởi tạo biến đếm lượt in nếu chưa có để sửa lỗi bấm in nhiều lần
+if "print_counter" not in st.session_state:
+    st.session_state.print_counter = 0
+
 # =========================
-# 2. TIỆN ÍCH SIDEBAR (NGÀY & THỜI TIẾT) - ĐÃ FIX MÚI GIỜ VN
+# 2. TIỆN ICS SIDEBAR (NGÀY & THỜI TIẾT) - ĐÃ FIX MÚI GIỜ VN
 # =========================
 now = datetime.datetime.utcnow() + datetime.timedelta(hours=7)
 thu_tieng_viet = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"]
@@ -90,7 +95,7 @@ st.markdown("""
             margin: 5mm 10mm 10mm 10mm; /* Ép lề trên sát 5mm */
         }
         
-        /* Ẩn giao diện web thừa bao gồm cả nút In HTML */
+        /* Ẩn giao diện web thừa bao gồm cả các nút bấm và khung ẩn iframe chứa lệnh in */
         section[data-testid="stSidebar"], 
         div[data-testid="stForm"], 
         div.stSelectbox,
@@ -100,7 +105,7 @@ st.markdown("""
         iframe,
         [data-testid="stHeader"],
         div.stButton,
-        .no-print { 
+        [data-testid="stElementContainer"] button { 
             display: none !important; 
         }
         
@@ -176,7 +181,7 @@ def ket_noi_sheet():
 ws = ket_noi_sheet()
 
 # =========================
-# 5. SIDEBAR GIAO DIỆN (ĐÃ FIX LỖI CHUỖI NHÁY ĐƠN)
+# 5. SIDEBAR GIAO DIỆN
 # =========================
 with st.sidebar:
     st.markdown(f"""
@@ -201,7 +206,7 @@ with st.sidebar:
     else:
         list_tu_sheet = []
 
-    mac_dinh = ["Ahamove", "Grab", "Lalamove", "GHTK", "GHN", "Viettl Post"]
+    mac_dinh = ["Ahamove 🛵", "Grab 🚗", "Lalamove 🚛", "GHTK 📦"]
     if "ds_donvi" not in st.session_state:
         st.session_state.ds_donvi = list(set(mac_dinh + list_tu_sheet))
 
@@ -246,37 +251,29 @@ df["Phí (VNĐ)"] = df["Phí (VNĐ)"].apply(lambda x: int(re.sub(r"[^\d]", "", s
 df["Ngày"] = pd.to_datetime(df["Ngày"], format="%d/%m/%Y", errors="coerce")
 months = sorted(df["Ngày"].dt.strftime("%m/%Y").dropna().unique(), reverse=True)
 
-thang = st.selectbox("📅 Chọn tháng", months)
+thang = st.selectbox("📅 Chọn tháng hiển thị", months)
 
 df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang]
 df_f = df_f.sort_values(by="Ngày", ascending=True)
 
-# --- NÚT BẤM HTML CHUẨN: KHÔNG DÙNG STATE STREAMLIT - IN LIÊN TỤC VÔ TƯ ---
-st.markdown("""
-    <div class="no-print" style="margin: 20px 0;">
-        <button onclick="window.parent.print();" style="
-            background-color: white; 
-            color: #5B7E3C; 
-            border: 1px solid #5B7E3C; 
-            padding: 8px 16px; 
-            font-size: 16px; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            display: flex; 
-            align-items: center; 
-            gap: 8px;
-            font-weight: bold;
-            transition: all 0.3s;
-        " onmouseover="this.style.backgroundColor='#5B7E3C'; this.style.color='white';" onmouseout="this.style.backgroundColor='white'; this.style.color='#5B7E3C';">
-            🖨️ In ở đây nè bé
-        </button>
-    </div>
-""", unsafe_allow_html=True)
+# --- GIẢI PHÁP ĐÚNG: SỬ DỤNG LẠI NÚT STREAMLIT KÈM BIẾN ĐẾM TRẠNG THÁI ---
+st.write(" ")
+if st.button("🖨️ In bảng tính tháng này"):
+    # Tăng biến đếm lên để báo hiệu cho Streamlit render lại thành phần iframe chạy ngầm bên dưới
+    st.session_state.print_counter += 1
+
+# Tạo iframe chạy ngầm kích hoạt lệnh in dựa trên biến đếm lượt bấm nút
+if st.session_state.print_counter > 0:
+    components.html(f"""
+        <script>
+            window.parent.print();
+        </script>
+    """, height=0, key=f"print_trigger_{st.session_state.print_counter}")
 
 # ========================================================
 # 7. HIỂN THỊ BẢNG DỮ LIỆU
 # ========================================================
-st.markdown(f'<div class="print-title">CHI PHÍ GIAO HÀNG - THÁNG {thang}</div>', unsafe_allow_html=True)
+st.markdown(f'<div class="print-title">BẢNG CHI TIẾT CHI PHÍ GIAO HÀNG - THÁNG {thang}</div>', unsafe_allow_html=True)
 
 h1, h2, h3, h4, h5, h6 = st.columns([1, 2.5, 7, 3, 3, 1.5])
 h1.markdown('<div class="header-col header-left">STT</div>', unsafe_allow_html=True)
