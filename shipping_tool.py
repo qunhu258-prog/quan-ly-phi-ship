@@ -12,12 +12,8 @@ import streamlit.components.v1 as components
 # =========================
 st.set_page_config(layout="wide", page_title="Quản lý phí Ship")
 
-# Khởi tạo biến đếm lượt in nếu chưa có để sửa lỗi bấm in nhiều lần
-if "print_counter" not in st.session_state:
-    st.session_state.print_counter = 0
-
 # =========================
-# 2. TIỆN ICS SIDEBAR (NGÀY & THỜI TIẾT) - ĐÃ FIX MÚI GIỜ VN
+# 2. TIỆN ÍCH SIDEBAR (NGÀY & THỜI TIẾT) - ĐÃ FIX MÚI GIỜ VN
 # =========================
 now = datetime.datetime.utcnow() + datetime.timedelta(hours=7)
 thu_tieng_viet = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"]
@@ -33,7 +29,7 @@ else:
     thoi_tiet = "Trời đêm mát mẻ ✨"
 
 # =========================
-# 3. STYLE CSS TỔNG HỢP (FIX TUYỆT ĐỐI LỀ TRÊN KHI IN)
+# 3. STYLE CSS TỔNG HỢP (SỬA TRIỆT ĐỂ LỀ TRÊN KHI IN)
 # =========================
 st.markdown("""
 <style>
@@ -92,10 +88,15 @@ st.markdown("""
     @media print {
         @page {
             size: landscape;
-            margin: 5mm 10mm 10mm 10mm; /* Ép lề trên sát 5mm */
+            margin: 0 !important; /* Xóa bỏ lề mặc định của trình duyệt để loại bỏ khoảng trống thừa */
         }
         
-        /* Ẩn giao diện web thừa bao gồm cả các nút bấm và khung ẩn iframe chứa lệnh in */
+        body {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        /* Ẩn tất cả các thành phần giao diện không liên quan */
         section[data-testid="stSidebar"], 
         div[data-testid="stForm"], 
         div.stSelectbox,
@@ -105,14 +106,16 @@ st.markdown("""
         iframe,
         [data-testid="stHeader"],
         div.stButton,
-        [data-testid="stElementContainer"] button { 
+        div[data-testid="stElementContainer"] button { 
             display: none !important; 
         }
         
-        /* TRIỆT TIÊU TOÀN BỘ KHOẢNG TRẮNG ĐỆM TRÊN CỦA STREAMLIT */
+        /* ĐẨY NỘI DUNG LÊN TRÊN CÙNG TRANG IN */
         .main, .main .block-container, [data-testid="stMainBlockContainer"] {
-            padding-top: 0px !important;
-            margin-top: 0px !important;
+            padding-top: 10mm !important; /* Tạo lề trên cố định nhỏ gọn */
+            padding-left: 15mm !important;
+            padding-right: 15mm !important;
+            margin: 0px !important;
             top: 0px !important;
         }
 
@@ -127,7 +130,7 @@ st.markdown("""
             font-weight: bold !important;
         }
 
-        /* Định dạng lại dòng bảng */
+        /* Định dạng bảng khi in */
         div[data-testid="stHorizontalBlock"] {
             display: flex !important;
             flex-direction: row !important;
@@ -140,7 +143,7 @@ st.markdown("""
             display: none !important;
         }
 
-        /* Ép tỷ lệ cột chuẩn khổ giấy ngang */
+        /* Ép layout dòng chia tỉ lệ chuẩn khổ giấy ngang */
         div[data-testid="stHorizontalBlock"] > div:nth-child(1) { width: 6% !important; max-width: 6% !important; flex: 0 0 6% !important; }
         div[data-testid="stHorizontalBlock"] > div:nth-child(2) { width: 14% !important; max-width: 14% !important; flex: 0 0 14% !important; }
         div[data-testid="stHorizontalBlock"] > div:nth-child(3) { width: 50% !important; max-width: 50% !important; flex: 0 0 50% !important; }
@@ -184,25 +187,25 @@ ws = ket_noi_sheet()
 # 5. SIDEBAR GIAO DIỆN
 # =========================
 with st.sidebar:
-    st.markdown(f"""
+    st.markdown(f'''
     <div class="taskbar-box">
-        <p style="margin:0; font-size: 14px; color: #555555;">📅 <b>Hôm nay:</b></p>
+        <p style="margin:0; font-size: 14px; color: #555;">📅 <b>Hôm nay:</b></p>
         <p style="margin:0; font-size: 16px; font-weight: bold;">{ngay_hien_tai}</p>
-        <hr style="margin: 10px 0; border: 0.5px solid #dddddd;">
-        <p style="margin:0; font-size: 14px; color: #555555;">🌤️ <b>Thời tiết:</b></p>
+        <hr style="margin: 10px 0; border: 0.5px solid #ddd;">
+        <p style="margin:0; font-size: 14px; color: #555;">🌤️ <b>Thời tiết:</b></p>
         <p style="margin:0; font-size: 16px; font-weight: bold;">{thoi_tiet}</p>
         <p style="margin-top:8px; font-size: 16px; font-weight: bold; color: #5B7E3C;">
             Vui vẻ lên nhé ✨🐻
         </p>
     </div>
-    """, unsafe_allow_html=True)
+    ''', unsafe_allow_html=True)
 
     st.header("⚙️ Cài đặt")
     
     data_all = ws.get_all_values()
     if len(data_all) > 1:
         df_all = pd.DataFrame(data_all[1:], columns=data_all[0])
-        list_tu_sheet = df_all["Đơn vị"].unique().tolist()
+        list_tu_sheet = df_all['Đơn vị'].unique().tolist()
     else:
         list_tu_sheet = []
 
@@ -256,19 +259,14 @@ thang = st.selectbox("📅 Chọn tháng hiển thị", months)
 df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang]
 df_f = df_f.sort_values(by="Ngày", ascending=True)
 
-# --- GIẢI PHÁP ĐÚNG: SỬ DỤNG LẠI NÚT STREAMLIT KÈM BIẾN ĐẾM TRẠNG THÁI ---
+# --- NÚT IN CƠ BẢN (NHẤN IN XONG F5 ĐỂ IN TIẾP LẦN SAU) ---
 st.write(" ")
 if st.button("🖨️ In bảng tính tháng này"):
-    # Tăng biến đếm lên để báo hiệu cho Streamlit render lại thành phần iframe chạy ngầm bên dưới
-    st.session_state.print_counter += 1
-
-# Tạo iframe chạy ngầm kích hoạt lệnh in dựa trên biến đếm lượt bấm nút
-if st.session_state.print_counter > 0:
-    components.html(f"""
+    components.html("""
         <script>
             window.parent.print();
         </script>
-    """, height=0, key=f"print_trigger_{st.session_state.print_counter}")
+    """, height=0)
 
 # ========================================================
 # 7. HIỂN THỊ BẢNG DỮ LIỆU
@@ -286,7 +284,7 @@ h6.markdown('<div class="header-col header-right">Xóa</div>', unsafe_allow_html
 for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
     ngay_txt = row["Ngày"].strftime("%d/%m/%Y") if not pd.isna(row["Ngày"]) else ""
     c1, c2, c3, c4, c5, c6 = st.columns([1, 2.5, 7, 3, 3, 1.5])
-    c1.markdown(f"<div class='row-style'>{idx}</div>", unsafe_allow_html=True)
+    c1.markdown(f"<div class='row-style'>{idx}</div>", unsafe_allow_style=True)
     c2.markdown(f"<div class='row-style'>{ngay_txt}</div>", unsafe_allow_html=True)
     c3.markdown(f"<div class='row-style' style='text-align:left; justify-content:flex-start; padding-left:10px;'>{row['Nội dung']}</div>", unsafe_allow_html=True)
     c4.markdown(f"<div class='row-style'>{row['Đơn vị']}</div>", unsafe_allow_html=True)
