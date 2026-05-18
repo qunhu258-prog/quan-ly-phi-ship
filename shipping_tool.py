@@ -75,12 +75,12 @@ st.markdown("""
         header, footer, h1, iframe, [data-testid="stHeader"], div.stButton,
         div[data-testid="stElementContainer"] button { display: none !important; }
         .main, .main .block-container, [data-testid="stMainBlockContainer"] {
-            padding-top: 10mm !important; padding-left: 15mm !important; padding-right: 15mm !important;
+            padding-top: 15mm !important; padding-left: 15mm !important; padding-right: 15mm !important;
             margin: 0px !important; top: 0px !important;
         }
         .print-title {
             display: block !important; color: #5B7E3C !important; text-align: center !important;
-            margin-top: 0px !important; margin-bottom: 25px !important; font-size: 24px !important; font-weight: bold !important;
+            margin-top: 10px !important; margin-bottom: 30px !important; font-size: 24px !important; font-weight: bold !important;
         }
         div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; width: 100% !important; gap: 0px !important; }
         div[data-testid="stHorizontalBlock"] > div:nth-child(6) { display: none !important; }
@@ -201,7 +201,7 @@ with btn_c1:
         components.html("<script>window.parent.print();</script>", height=0)
 
 with btn_c2:
-    # Hàm thiết kế cấu trúc HTML full chiều rộng (bỏ chữ phụ) để lưu file
+    # Thêm padding-top vào title-container để đẩy chữ xuống dưới, không sát lề
     def tao_giao_dien_html_full_width(dataframe, month_txt, total_amount):
         rows_html = ""
         for idx, (_, r) in enumerate(dataframe.iterrows(), start=1):
@@ -222,9 +222,9 @@ with btn_c2:
         <head>
             <meta charset="utf-8">
             <style>
-                @page {{ size: landscape; margin: 5mm 5mm; }}
+                @page {{ size: landscape; margin: 0; }}
                 body {{ font-family: 'Helvetica Neue', Arial, sans-serif; color: #333; margin: 0; padding: 0; width: 100%; }}
-                .title-container {{ text-align: center; margin-bottom: 20px; width: 100%; }}
+                .title-container {{ text-align: center; padding-top: 30px; margin-bottom: 25px; width: 100%; }}
                 .print-title {{ color: #5B7E3C; font-size: 22pt; font-weight: bold; margin: 0; text-transform: uppercase; }}
                 table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; }}
                 th {{ background-color: #5B7E3C; color: white; font-weight: bold; font-size: 12pt; padding: 12px 6px; border: 1px solid #5B7E3C; }}
@@ -237,7 +237,7 @@ with btn_c2:
             <div class="title-container">
                 <h1 class="print-title">BẢNG CHI TIẾT CHI PHÍ GIAO HÀNG - THÁNG {month_txt}</h1>
             </div>
-            <table>
+            <table style="padding: 0 10px;">
                 <thead>
                     <tr>
                         <th style="width: 6%;">STT</th>
@@ -251,7 +251,9 @@ with btn_c2:
                     {rows_html}
                 </tbody>
             </table>
-            <div class="total-box">💰 TỔNG CHI PHÍ THÁNG {month_txt}: {total_amount:,.0f} VNĐ</div>
+            <div style="padding: 0 10px;">
+                <div class="total-box">💰 TỔNG CHI PHÍ THÁNG {month_txt}: {total_amount:,.0f} VNĐ</div>
+            </div>
         </body>
         </html>
         """
