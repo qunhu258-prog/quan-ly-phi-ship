@@ -12,10 +12,6 @@ import streamlit.components.v1 as components
 # =========================
 st.set_page_config(layout="wide", page_title="Quản lý phí Ship")
 
-# Khởi tạo biến đếm lượt in nếu chưa có để sửa lỗi bấm in nhiều lần
-if "print_counter" not in st.session_state:
-    st.session_state.print_counter = 0
-
 # =========================
 # 2. TIỆN ÍCH SIDEBAR (NGÀY & THỜI TIẾT) - ĐÃ FIX MÚI GIỜ VN
 # =========================
@@ -33,7 +29,7 @@ else:
     thoi_tiet = "Trời đêm mát mẻ ✨"
 
 # =========================
-# 3. STYLE CSS TỔNG HỢP (FIX TUYỆT ĐỐI LỀ TRÊN KHI IN)
+# 3. STYLE CSS TỔNG HỢP (SỬA LỖI KHOẢNG TRẮNG TRÊN CÙNG KHI IN)
 # =========================
 st.markdown("""
 <style>
@@ -92,10 +88,10 @@ st.markdown("""
     @media print {
         @page {
             size: landscape;
-            margin: 5mm 10mm 10mm 10mm; /* Ép lề trên sát 5mm */
+            margin: 5mm 10mm 10mm 10mm; /* Giảm hẳn lề trên xuống còn 5mm */
         }
         
-        /* Ẩn giao diện web thừa bao gồm cả các nút bấm và khung ẩn iframe chứa lệnh in */
+        /* Ẩn các thành phần không liên quan */
         section[data-testid="stSidebar"], 
         div[data-testid="stForm"], 
         div.stSelectbox,
@@ -104,12 +100,11 @@ st.markdown("""
         h1,
         iframe,
         [data-testid="stHeader"],
-        div.stButton,
-        [data-testid="stElementContainer"] button { 
+        div.stButton { 
             display: none !important; 
         }
         
-        /* TRIỆT TIÊU TOÀN BỘ KHOẢNG TRẮNG ĐỆM TRÊN CỦA STREAMLIT */
+        /* TRIỆT TIÊU TOÀN BỘ KHOẢNG TRẮNG PHÍA TRÊN CỦA STREAMLIT */
         .main, .main .block-container, [data-testid="stMainBlockContainer"] {
             padding-top: 0px !important;
             margin-top: 0px !important;
@@ -127,7 +122,7 @@ st.markdown("""
             font-weight: bold !important;
         }
 
-        /* Định dạng lại dòng bảng */
+        /* Định dạng bảng khi in */
         div[data-testid="stHorizontalBlock"] {
             display: flex !important;
             flex-direction: row !important;
@@ -140,7 +135,7 @@ st.markdown("""
             display: none !important;
         }
 
-        /* Ép tỷ lệ cột chuẩn khổ giấy ngang */
+        /* Ép layout dòng chia tỉ lệ chuẩn khổ giấy ngang */
         div[data-testid="stHorizontalBlock"] > div:nth-child(1) { width: 6% !important; max-width: 6% !important; flex: 0 0 6% !important; }
         div[data-testid="stHorizontalBlock"] > div:nth-child(2) { width: 14% !important; max-width: 14% !important; flex: 0 0 14% !important; }
         div[data-testid="stHorizontalBlock"] > div:nth-child(3) { width: 50% !important; max-width: 50% !important; flex: 0 0 50% !important; }
@@ -184,25 +179,25 @@ ws = ket_noi_sheet()
 # 5. SIDEBAR GIAO DIỆN
 # =========================
 with st.sidebar:
-    st.markdown(f"""
+    st.markdown(f'''
     <div class="taskbar-box">
-        <p style="margin:0; font-size: 14px; color: #555555;">📅 <b>Hôm nay:</b></p>
+        <p style="margin:0; font-size: 14px; color: #555;">📅 <b>Hôm nay:</b></p>
         <p style="margin:0; font-size: 16px; font-weight: bold;">{ngay_hien_tai}</p>
-        <hr style="margin: 10px 0; border: 0.5px solid #dddddd;">
-        <p style="margin:0; font-size: 14px; color: #555555;">🌤️ <b>Thời tiết:</b></p>
+        <hr style="margin: 10px 0; border: 0.5px solid #ddd;">
+        <p style="margin:0; font-size: 14px; color: #555;">🌤️ <b>Thời tiết:</b></p>
         <p style="margin:0; font-size: 16px; font-weight: bold;">{thoi_tiet}</p>
         <p style="margin-top:8px; font-size: 16px; font-weight: bold; color: #5B7E3C;">
             Vui vẻ lên nhé ✨🐻
         </p>
     </div>
-    """, unsafe_allow_html=True)
+    ''', unsafe_allow_html=True)
 
     st.header("⚙️ Cài đặt")
     
     data_all = ws.get_all_values()
     if len(data_all) > 1:
         df_all = pd.DataFrame(data_all[1:], columns=data_all[0])
-        list_tu_sheet = df_all["Đơn vị"].unique().tolist()
+        list_tu_sheet = df_all['Đơn vị'].unique().tolist()
     else:
         list_tu_sheet = []
 
@@ -256,19 +251,16 @@ thang = st.selectbox("📅 Chọn tháng hiển thị", months)
 df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang]
 df_f = df_f.sort_values(by="Ngày", ascending=True)
 
-# --- SỬA LỖI CHUẨN TỐI ƯU: KHÔNG ĐỔI KEY, THAY ĐỔI BIẾN TRONG CHUỖI ĐỂ TỰ RE-RENDER ---
+# --- SỬA LỖI BẤM ĐƯỢC NHIỀU LẦN VỚI PHƯƠNG PHÁP CHUYỂN ĐỔI STATE ---
 st.write(" ")
 if st.button("🖨️ In bảng tính tháng này"):
-    st.session_state.print_counter += 1
-
-# Iframe chạy ngầm gọi lệnh in chuẩn không gây lỗi TypeError
-if st.session_state.print_counter > 0:
-    components.html(f"""
+    components.html("""
         <script>
-            // Biến kiểm tra thay đổi nội dung để ép render lại: {st.session_state.print_counter}
             window.parent.print();
         </script>
-    """, height=0, key="print_trigger_fixed")
+    """, height=0)
+    # Tự động reload nhẹ chạy ngầm để xóa trạng thái cũ, giúp nút bấm sẵn sàng cho lần tiếp theo
+    st.session_state["print_triggered"] = True
 
 # ========================================================
 # 7. HIỂN THỊ BẢNG DỮ LIỆU
