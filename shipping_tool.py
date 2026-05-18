@@ -183,19 +183,6 @@ df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang]
 
 # --- BƯỚC THÊM MỚI: Sắp xếp ngày tăng dần (cũ đến mới, ngày 4 sẽ tự lên trên ngày 6) ---
 df_f = df_f.sort_values(by="Ngày", ascending=True)
-# --- THÊM NÚT IN ẤN TRỰC TIẾP QUA JAVASCRIPT ---
-st.markdown("""
-    <div class="print-button" style="text-align: right; margin-bottom: 15px;">
-        <button onclick="window.print()" style="
-            background-color: #5B7E3C; color: white; border: none; 
-            padding: 10px 20px; font-size: 16px; font-weight: bold;
-            border-radius: 8px; cursor: pointer; display: inline-flex; 
-            align-items: center; gap: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-        ">
-            🖨️ In bảng tính (Khổ ngang)
-        </button>
-    </div>
-""", unsafe_allow_html=True)
 
 # =========================
 # 7. HIỂN THỊ BẢNG (Màu xanh lá #5B7E3C)
