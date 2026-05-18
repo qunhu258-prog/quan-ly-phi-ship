@@ -98,7 +98,7 @@ st.markdown("""
         header, 
         footer,
         h1,
-        iframe, /* Ẩn nút in */
+        iframe, 
         div[data-testid="stBlock"] button { 
             display: none !important; 
         }
@@ -241,7 +241,7 @@ thang = st.selectbox("📅 Chọn tháng hiển thị", months)
 df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang]
 df_f = df_f.sort_values(by="Ngày", ascending=True)
 
-# --- NÚT IN HOÀN TOÀN MỚI (TỰ KÍCH HOẠT LỆNH PRINT CỦA TRÌNH DUYỆT TRỰC TIẾP) ---
+# Nút kích hoạt lệnh in hệ thống
 st.write(" ")
 if st.button("🖨️ In bảng tính tháng này"):
     components.html("""
@@ -253,7 +253,6 @@ if st.button("🖨️ In bảng tính tháng này"):
 # =========================
 # 7. HIỂN THỊ BẢNG DỮ LIỆU
 # =========================
-# Tiêu đề này sẽ ẩn trên web và tự động hiển thị ở đầu trang khi xuất file in/PDF
 st.markdown(f'<div class="print-title">BẢNG CHI TIẾT CHI PHÍ GIAO HÀNG - THÁNG {thang}</div>', unsafe_allow_html=True)
 
 h1, h2, h3, h4, h5, h6 = st.columns([1, 2.5, 7, 3, 3, 1.5])
@@ -269,4 +268,18 @@ for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
     c1, c2, c3, c4, c5, c6 = st.columns([1, 2.5, 7, 3, 3, 1.5])
     c1.markdown(f"<div class='row-style'>{idx}</div>", unsafe_allow_html=True)
     c2.markdown(f"<div class='row-style'>{ngay_txt}</div>", unsafe_allow_html=True)
-    c3.markdown(f"<div class='row-style' style='text-align:left; justify-content:flex-start; padding-left:10px;'>{row
+    c3.markdown(f"<div class='row-style' style='text-align:left; justify-content:flex-start; padding-left:10px;'>{row['Nội dung']}</div>", unsafe_allow_html=True)
+    c4.markdown(f"<div class='row-style'>{row['Đơn vị']}</div>", unsafe_allow_html=True)
+    c5.markdown(f"<div class='row-style'><b>{row['Phí (VNĐ)']:,}</b></div>", unsafe_allow_html=True)
+    with c6:
+        if st.button("❌", key=f"del_{i}"):
+            ws.delete_rows(i + 2)
+            st.cache_resource.clear()
+            st.rerun()
+    st.markdown('<hr style="margin:0; border:0.5px solid #f1f4ef;">', unsafe_allow_html=True)
+
+# =========================
+# 8. TỔNG CỘNG
+# =========================
+tong = int(df_f["Phí (VNĐ)"].sum())
+st.markdown(f'<div class="total-box">💰 TỔNG CHI PHÍ THÁNG {thang}: {tong:,.0f} VNĐ</div>', unsafe_allow_html=True)
