@@ -178,7 +178,11 @@ df["Phí (VNĐ)"] = df["Phí (VNĐ)"].apply(lambda x: int(re.sub(r"[^\d]", "", s
 df["Ngày"] = pd.to_datetime(df["Ngày"], format="%d/%m/%Y", errors="coerce")
 months = sorted(df["Ngày"].dt.strftime("%m/%Y").dropna().unique(), reverse=True)
 thang = st.selectbox("📅 Chọn tháng hiển thị", months)
+# Lọc theo tháng đã chọn
 df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang]
+
+# --- BƯỚC THÊM MỚI: Sắp xếp ngày tăng dần (cũ đến mới, ngày 4 sẽ tự lên trên ngày 6) ---
+df_f = df_f.sort_values(by="Ngày", ascending=True)
 
 # =========================
 # 7. HIỂN THỊ BẢNG (Màu xanh lá #5B7E3C)
