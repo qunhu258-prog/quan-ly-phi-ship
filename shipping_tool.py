@@ -284,7 +284,7 @@ h6.markdown('<div class="header-col header-right">Xóa</div>', unsafe_allow_html
 for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
     ngay_txt = row["Ngày"].strftime("%d/%m/%Y") if not pd.isna(row["Ngày"]) else ""
     c1, c2, c3, c4, c5, c6 = st.columns([1, 2.5, 7, 3, 3, 1.5])
-    c1.markdown(f"<div class='row-style'>{idx}</div>", unsafe_allow_style=True)
+    c1.markdown(f"<div class='row-style'>{idx}</div>", unsafe_allow_html=True)
     c2.markdown(f"<div class='row-style'>{ngay_txt}</div>", unsafe_allow_html=True)
     c3.markdown(f"<div class='row-style' style='text-align:left; justify-content:flex-start; padding-left:10px;'>{row['Nội dung']}</div>", unsafe_allow_html=True)
     c4.markdown(f"<div class='row-style'>{row['Đơn vị']}</div>", unsafe_allow_html=True)
