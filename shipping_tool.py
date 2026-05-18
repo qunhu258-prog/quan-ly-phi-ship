@@ -91,16 +91,22 @@ st.markdown("""
             margin: 10mm;
         }
         
-        /* Ẩn toàn bộ các phần thừa thãi trên màn hình */
+        /* Ẩn toàn bộ giao diện web bao gồm cả các nút bấm của Streamlit */
+        body *,
         section[data-testid="stSidebar"], 
         div[data-testid="stForm"], 
         div.stSelectbox,
         header, 
         footer,
         h1,
-        iframe, 
-        div[data-testid="stBlock"] button { 
+        iframe,
+        div[data-testid="stElementContainer"] { 
             display: none !important; 
+        }
+        
+        /* CHỈ BẬT HIỂN THỊ duy nhất vùng dữ liệu bảng tính */
+        #vung-in-thang, #vung-in-thang * {
+            display: block !important;
         }
         
         /* Hiện tiêu đề in chuyên nghiệp */
@@ -113,27 +119,27 @@ st.markdown("""
             font-weight: bold !important;
         }
 
-        /* Ẩn cột Xóa (cột số 6) */
-        div[data-testid="stHorizontalBlock"] > div:nth-child(6) {
+        /* Ẩn cột Xóa (cột số 6) bên trong vùng in */
+        #vung-in-thang div[data-testid="stHorizontalBlock"] > div:nth-child(6) {
             display: none !important;
         }
 
         /* Ép layout dòng chia tỉ lệ chuẩn khổ giấy ngang */
-        div[data-testid="stHorizontalBlock"] {
+        #vung-in-thang div[data-testid="stHorizontalBlock"] {
             display: flex !important;
             flex-direction: row !important;
             width: 100% !important;
             gap: 0px !important;
         }
-        div[data-testid="stHorizontalBlock"] > div:nth-child(1) { width: 6% !important; max-width: 6% !important; flex: 0 0 6% !important; }
-        div[data-testid="stHorizontalBlock"] > div:nth-child(2) { width: 14% !important; max-width: 14% !important; flex: 0 0 14% !important; }
-        div[data-testid="stHorizontalBlock"] > div:nth-child(3) { width: 50% !important; max-width: 50% !important; flex: 0 0 50% !important; }
-        div[data-testid="stHorizontalBlock"] > div:nth-child(4) { width: 15% !important; max-width: 15% !important; flex: 0 0 15% !important; }
-        div[data-testid="stHorizontalBlock"] > div:nth-child(5) { 
+        #vung-in-thang div[data-testid="stHorizontalBlock"] > div:nth-child(1) { width: 6% !important; max-width: 6% !important; flex: 0 0 6% !important; }
+        #vung-in-thang div[data-testid="stHorizontalBlock"] > div:nth-child(2) { width: 14% !important; max-width: 14% !important; flex: 0 0 14% !important; }
+        #vung-in-thang div[data-testid="stHorizontalBlock"] > div:nth-child(3) { width: 50% !important; max-width: 50% !important; flex: 0 0 50% !important; }
+        #vung-in-thang div[data-testid="stHorizontalBlock"] > div:nth-child(4) { width: 15% !important; max-width: 15% !important; flex: 0 0 15% !important; }
+        #vung-in-thang div[data-testid="stHorizontalBlock"] > div:nth-child(5) { 
             width: 15% !important; max-width: 15% !important; flex: 0 0 15% !important;
             border-right: none !important;
         }
-        div[data-testid="stHorizontalBlock"]:has(.header-col) > div:nth-child(5) .header-col {
+        #vung-in-thang div[data-testid="stHorizontalBlock"]:has(.header-col) > div:nth-child(5) .header-col {
             border-radius: 0 8px 0 0 !important;
         }
 
@@ -241,18 +247,21 @@ thang = st.selectbox("📅 Chọn tháng hiển thị", months)
 df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang]
 df_f = df_f.sort_values(by="Ngày", ascending=True)
 
-# Nút kích hoạt lệnh in hệ thống
+# Nút kích hoạt lệnh in hệ thống (Nằm ngoài vùng '#vung-in-thang' nên sẽ bị ẩn khi in)
 st.write(" ")
-if st.button("🖨️ In bảng tính tháng này"):
+if st.button("🖨️ In đi nè bé"):
     components.html("""
         <script>
             window.parent.print();
         </script>
     """, height=0)
 
-# =========================
-# 7. HIỂN THỊ BẢNG DỮ LIỆU
-# =========================
+# ========================================================
+# 7. KHU VỰC CHỨA DỮ LIỆU IN (Bọc trong div id="vung-in-thang")
+# ========================================================
+st.markdown('<div id="vung-in-thang">', unsafe_allow_html=True)
+
+# Tiêu đề chuyên nghiệp tự động xuất hiện trên giấy in
 st.markdown(f'<div class="print-title">BẢNG CHI TIẾT CHI PHÍ GIAO HÀNG - THÁNG {thang}</div>', unsafe_allow_html=True)
 
 h1, h2, h3, h4, h5, h6 = st.columns([1, 2.5, 7, 3, 3, 1.5])
@@ -279,7 +288,9 @@ for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
     st.markdown('<hr style="margin:0; border:0.5px solid #f1f4ef;">', unsafe_allow_html=True)
 
 # =========================
-# 8. TỔNG CỘNG
+# 8. TỔNG CỘNG (Nằm trong vùng in)
 # =========================
 tong = int(df_f["Phí (VNĐ)"].sum())
 st.markdown(f'<div class="total-box">💰 TỔNG CHI PHÍ THÁNG {thang}: {tong:,.0f} VNĐ</div>', unsafe_allow_html=True)
+
+st.markdown('</div>', unsafe_allow_html=True) # Đóng div vung-in-thang
