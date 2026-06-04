@@ -68,12 +68,13 @@ st.markdown("""
         color: white !important;
     }
     .print-title { display: none; }
+    .kpi-main-title { font-size: 24px; font-weight: bold; color: #222; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
 
-    /* CSS CHO KHỐI THÔNG TIN CARD KPI KẾ TOÁN (THU NHỎ VÀO GIỮA) */
+    /* CSS CHO KHỐI THÔNG TIN CARD KPI KẾ TOÁN */
     .kpi-wrapper {
-        max-width: 900px;
+        max-width: 100%;
         margin: 0 auto;
-        padding: 0 10px;
+        padding: 0;
     }
     .kpi-container {
         display: flex;
@@ -93,46 +94,50 @@ st.markdown("""
     .kpi-header {
         background-color: #5B7E3C;
         color: #ffffff;
-        font-size: 14px;
+        font-size: 15px;
         font-weight: 700;
         padding: 12px 5px;
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
     .kpi-body {
-        padding: 22px 10px;
+        padding: 25px 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+    }
+    .kpi-value-row {
         display: flex;
         align-items: baseline;
         justify-content: center;
         gap: 6px;
     }
     .kpi-value {
-        font-size: 32px;
-        color: #222222;
+        font-size: 36px;
+        color: #5B7E3C;
         font-weight: 700;
         font-family: 'Segoe UI', Arial, sans-serif;
         line-height: 1;
     }
     .kpi-currency {
-        font-size: 16px;
+        font-size: 18px;
         font-weight: bold;
         color: #666666;
     }
 
     /* ==========================================
-       XỬ LÝ TRIỆT ĐỂ LỖI LÙI TRANG KHI IN 🖨️
+       XỬ LÝ TRIỆT ĐỂ LỖI BẢN IN KHI ẤN IN 🖨️
        ========================================== */
     @media print {
         @page { size: landscape; margin: 8mm 12mm !important; }
         
-        /* Triệt tiêu hoàn toàn thanh Header mặc định của Streamlit */
         header, [data-testid="stHeader"], .stAppHeader {
             display: none !important;
             height: 0 !important;
-            opacity: 0 !important;
         }
 
-        /* Ẩn hoàn toàn tất cả các thành phần giao diện không cần in */
         section[data-testid="stSidebar"], 
         div[data-testid="stForm"], 
         div.stSelectbox,
@@ -149,17 +154,15 @@ st.markdown("""
             padding: 0 !important; 
         }
         
-        /* Ép khung chứa chính lên sát mép trên cùng của giấy, xóa toàn bộ padding khoảng trống */
         .stApp, .main, .main .block-container, [data-testid="stMainBlockContainer"] {
             padding-top: 0px !important; 
             margin-top: 0px !important;
             padding-left: 0px !important; 
             padding-right: 0px !important;
             margin: 0px !important; 
-            top: 0px !important;
         }
 
-        /* Tiêu đề in chuyên dụng được đưa lên trên cùng bản in */
+        /* Đẩy tiêu đề lên trên cùng bản in trước tất cả các khối */
         .print-title {
             display: block !important; 
             color: #5B7E3C !important; 
@@ -170,7 +173,7 @@ st.markdown("""
             font-weight: bold !important;
         }
 
-        /* Định dạng lại bảng và dòng dữ liệu cân đối */
+        /* Định dạng lại bảng khi in */
         div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; width: 100% !important; gap: 0px !important; }
         div[data-testid="stHorizontalBlock"] > div:nth-child(8) { display: none !important; }
         div[data-testid="stHorizontalBlock"] > div:nth-child(1) { width: 5% !important; max-width: 5% !important; flex: 0 0 5% !important; }
@@ -202,9 +205,7 @@ def ket_noi_sheet():
     scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
     creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
     gc = gspread.authorize(creds)
-    
-    # Sử dụng chuỗi String thuần túy, sạch sẽ để tránh lỗi mã hóa ký tự Notepad
-    id_goc = "1pX1uImwD770upHdJ4OKNzYxwKxd5C_VeI2zQeW0SBLU"
+    id_goc = "1pX1uImwD770upHdJ4OKNzYxwKxd5C_VeI2zQeW0SBLU".strip()
     return gc.open_by_key(id_goc).sheet1
 
 ws = ket_noi_sheet()
@@ -337,14 +338,15 @@ if not df_phat_sinh.empty:
 
 
 # ========================================================
-# 6.1. TIÊU ĐỀ IN TRÊN CÙNG (Chỉ hiển thị khi bấm In)
+# 6.1. XỬ LÝ ĐẶT VỊ TRÍ TIÊU ĐỀ IN (Đúng chuẩn trên cùng khi in)
 # ========================================================
 st.markdown(f'<div class="print-title">CHI PHÍ GIAO HÀNG - THÁNG {thang}</div>', unsafe_allow_html=True)
 
 
 # ========================================================
-# 6.2. HIỂN THỊ CÁC CARD KPI KẾ TOÁN (GỌN VÀO GIỮA - XÓA CHỮ DƯỚI)
+# 6.2. HIỂN THỊ CÁC CARD KPI KẾ TOÁN (Sạch chữ thừa bên dưới)
 # ========================================================
+st.markdown('<div class="kpi-main-title">📊 Số liệu thanh toán cho Kế toán</div>', unsafe_allow_html=True)
 st.html(
     f"""
     <div class="kpi-wrapper">
@@ -352,22 +354,30 @@ st.html(
             <div class="kpi-card">
                 <div class="kpi-header">🏢 SỐ TIỀN CÔNG TY CẦN CHUYỂN KHOẢN</div>
                 <div class="kpi-body">
-                    <div class="kpi-value" style="color: #2e7d32;">{tien_cty_ck:,}</div>
-                    <div class="kpi-currency">VNĐ</div>
+                    <div class="kpi-value-row">
+                        <div class="kpi-value" style="color: #2e7d32;">{tien_cty_ck:,}</div>
+                        <div class="kpi-currency">VNĐ</div>
+                    </div>
                 </div>
             </div>
             
             <div class="kpi-card">
                 <div class="kpi-header">👩‍💼 SỐ TIỀN CẦN TRẢ LẠI CHO QUỲNH NHƯ</div>
                 <div class="kpi-body">
-                    <div class="kpi-value" style="color: #e65100;">{tien_quynh_nhu:,}</div>
-                    <div class="kpi-currency">VNĐ</div>
+                    <div class="kpi-value-row">
+                        <div class="kpi-value" style="color: #e65100;">{tien_quynh_nhu:,}</div>
+                        <div class="kpi-currency">VNĐ</div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     """
 )
+
+# Thống kê nhanh dạng text nhỏ ngay dưới tiêu đề bảng biểu web
+st.markdown(f"<span style='color: #c2185b; font-weight:bold;'>📍 Thống kê nguồn chi:</span> Công ty CK: **{tien_cty_ck:,} đ** | Quỳnh Như hoàn trả: **{tien_quynh_nhu:,} đ**", unsafe_allow_html=True)
+st.markdown(f"### CHI PHÍ GIAO HÀNG - THÁNG {thang}")
 
 # Nút In & Xuất file
 st.write(" ")
@@ -392,8 +402,6 @@ with btn_c2:
                 <td style='text-align: right; padding-right: 12px; font-weight: bold; width: 12%;'>{r['Phí (VNĐ)']:,}</td>
             </tr>
             """
-        
-        # Đồng bộ mẫu xuất PDF y chang giao diện form in
         return f"""
         <!DOCTYPE html><html><head><meta charset="utf-8">
         <style>
@@ -402,14 +410,13 @@ with btn_c2:
             .title-container {{ text-align: center; margin-top: 0px; margin-bottom: 25px; }}
             .print-title {{ color: #5B7E3C; font-size: 26px; font-weight: bold; text-transform: uppercase; }}
             
-            /* CSS Card KPI cho file HTML đồng bộ co nhỏ vào giữa */
-            .kpi-wrapper {{ max-width: 900px; margin: 0 auto 25px auto; padding: 0 10px; }}
+            .kpi-wrapper {{ max-width: 100%; margin: 0 auto 25px auto; padding: 0; }}
             .kpi-container {{ display: flex; gap: 20px; }}
             .kpi-card {{ flex: 1; background-color: #ffffff; border: 2px solid #5B7E3C; border-radius: 8px; overflow: hidden; text-align: center; }}
-            .kpi-header {{ background-color: #5B7E3C; color: #ffffff; font-size: 14px; font-weight: 700; padding: 12px 5px; text-transform: uppercase; letter-spacing: 0.5px; }}
-            .kpi-body {{ padding: 22px 10px; display: flex; align-items: baseline; justify-content: center; gap: 6px; }}
-            .kpi-value {{ font-size: 32px; color: #222222; font-weight: 700; line-height: 1; }}
-            .kpi-currency {{ font-size: 16px; font-weight: bold; color: #666666; }}
+            .kpi-header {{ background-color: #5B7E3C; color: #ffffff; font-size: 15px; font-weight: 700; padding: 12px 5px; text-transform: uppercase; letter-spacing: 0.5px; }}
+            .kpi-body {{ padding: 25px 10px; display: flex; align-items: baseline; justify-content: center; gap: 6px; }}
+            .kpi-value {{ font-size: 36px; color: #5B7E3C; font-weight: 700; line-height: 1; }}
+            .kpi-currency {{ font-size: 18px; font-weight: bold; color: #666666; }}
             
             table {{ width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 20px; }}
             th {{ background-color: #5B7E3C; color: white; font-weight: bold; font-size: 13px; padding: 8px 4px; border: 1px solid #5B7E3C; }}
@@ -438,14 +445,14 @@ with btn_c2:
                 </div>
             </div>
 
-            <table style="padding: 0 10px;">
+            <table>
                 <thead><tr>
                     <th style="width: 5%;">STT</th><th style="width: 11%;">Ngày</th><th style="width: 34%;">Nội dung</th>
                     <th style="width: 12%;">ĐVVC</th><th style="width: 13%;">Phân loại</th><th style="width: 13%;">Người TT</th><th style="width: 12%;">Phí (VNĐ)</th>
                 </tr></thead>
                 <tbody>{rows_html}</tbody>
             </table>
-            <div style="padding: 0 10px;"><div class="total-box">💰 TỔNG CHI PHÍ THÁNG {month_txt}: {total_amount:,.0f} VNĐ</div></div>
+            <div><div class="total-box">💰 TỔNG CHI PHÍ THÁNG {month_txt}: {total_amount:,.0f} VNĐ</div></div>
         </body></html>
         """
 
@@ -491,4 +498,4 @@ for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
 # ==========================================
 # 8. TỔNG CỘNG
 # ==========================================
-st.markdown(f'<div class="total-box">💰 TỔNG CHI PHÍ THÁNG {thang}: {tong_tien:,.0f} VNĐ {thong_tin_them}</div>', unsafe_allow_html=True)
+st.markdown(f'<div class="total-box">💰 TỔNG CỘNG CHI PHÍ: {tong_tien:,.0f} VNĐ {thong_tin_them}</div>', unsafe_allow_html=True)
