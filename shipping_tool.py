@@ -7,14 +7,14 @@ from datetime import datetime as dt
 from google.oauth2.service_account import Credentials
 import streamlit.components.v1 as components
 
-# =========================
+# ==========================================
 # 1. CẤU HÌNH TRANG
-# =========================
+# ==========================================
 st.set_page_config(layout="wide", page_title="Quản lý phí Ship")
 
-# =========================
+# ==========================================
 # 2. TIỆN ÍCH SIDEBAR (NGÀY & THỜI TIẾT)
-# =========================
+# ==========================================
 now = datetime.datetime.utcnow() + datetime.timedelta(hours=7)
 thu_tieng_viet = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"]
 thu = thu_tieng_viet[now.weekday()]
@@ -28,9 +28,9 @@ elif 17 <= gio < 19:
 else:
     thoi_tiet = "Trời đêm mát mẻ ✨"
 
-# =========================
+# ==========================================
 # 3. STYLE CSS TỔNG HỢP GIAO DIỆN WEB
-# =========================
+# ==========================================
 st.markdown("""
 <style>
     .block-container { padding: 2rem 3rem; max-width: 100%; }
@@ -42,14 +42,15 @@ st.markdown("""
     div[data-testid="stHorizontalBlock"]:has(.header-col) { gap: 0px !important; }
     .header-col {
         background-color: #5B7E3C; color: white; font-weight: bold;
-        font-size: 18px; padding: 12px 5px; text-align: center;
+        font-size: 16px; padding: 12px 5px; text-align: center;
         border-right: 0.1px solid #ffffff33;
     }
     .header-left { border-radius: 8px 0 0 0; }
     .header-right { border-radius: 0 8px 0 0; border-right: none; }
     .row-style {
-        font-size: 18px; padding: 10px 0; display: flex;
+        font-size: 16px; padding: 10px 0; display: flex;
         align-items: center; justify-content: center;
+        text-align: center;
     }
     .total-box {
         padding: 18px; border-radius: 15px; font-size: 22px;
@@ -83,21 +84,23 @@ st.markdown("""
             margin-top: 10px !important; margin-bottom: 30px !important; font-size: 24px !important; font-weight: bold !important;
         }
         div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; width: 100% !important; gap: 0px !important; }
-        div[data-testid="stHorizontalBlock"] > div:nth-child(6) { display: none !important; }
-        div[data-testid="stHorizontalBlock"] > div:nth-child(1) { width: 6% !important; max-width: 6% !important; flex: 0 0 6% !important; }
-        div[data-testid="stHorizontalBlock"] > div:nth-child(2) { width: 14% !important; max-width: 14% !important; flex: 0 0 14% !important; }
-        div[data-testid="stHorizontalBlock"] > div:nth-child(3) { width: 50% !important; max-width: 50% !important; flex: 0 0 50% !important; }
-        div[data-testid="stHorizontalBlock"] > div:nth-child(4) { width: 15% !important; max-width: 15% !important; flex: 0 0 15% !important; }
-        div[data-testid="stHorizontalBlock"] > div:nth-child(5) { width: 15% !important; max-width: 15% !important; flex: 0 0 15% !important; border-right: none !important; }
-        div[data-testid="stHorizontalBlock"]:has(.header-col) > div:nth-child(5) .header-col { border-radius: 0 8px 0 0 !important; }
-        .row-style, .header-col { font-size: 15px !important; padding: 6px 2px !important; }
+        div[data-testid="stHorizontalBlock"] > div:nth-child(8) { display: none !important; } /* Ẩn cột xóa khi in */
+        div[data-testid="stHorizontalBlock"] > div:nth-child(1) { width: 5% !important; max-width: 5% !important; flex: 0 0 5% !important; }
+        div[data-testid="stHorizontalBlock"] > div:nth-child(2) { width: 11% !important; max-width: 11% !important; flex: 0 0 11% !important; }
+        div[data-testid="stHorizontalBlock"] > div:nth-child(3) { width: 34% !important; max-width: 34% !important; flex: 0 0 34% !important; }
+        div[data-testid="stHorizontalBlock"] > div:nth-child(4) { width: 12% !important; max-width: 12% !important; flex: 0 0 12% !important; }
+        div[data-testid="stHorizontalBlock"] > div:nth-child(5) { width: 13% !important; max-width: 13% !important; flex: 0 0 13% !important; }
+        div[data-testid="stHorizontalBlock"] > div:nth-child(6) { width: 13% !important; max-width: 13% !important; flex: 0 0 13% !important; }
+        div[data-testid="stHorizontalBlock"] > div:nth-child(7) { width: 12% !important; max-width: 12% !important; flex: 0 0 12% !important; border-right: none !important; }
+        div[data-testid="stHorizontalBlock"]:has(.header-col) > div:nth-child(7) .header-col { border-radius: 0 8px 0 0 !important; }
+        .row-style, .header-col { font-size: 13px !important; padding: 6px 2px !important; }
     }
 </style>
 """, unsafe_allow_html=True)
 
-# =========================
+# ==========================================
 # 4. KẾT NỐI GOOGLE SHEETS
-# =========================
+# ==========================================
 SHEET_ID = "1pX1uImwD770upHdJ4OKNzYxwKxd5qVeI2zQeW0SBLUg"
 
 @st.cache_resource
@@ -117,9 +120,39 @@ def ket_noi_sheet():
 
 ws = ket_noi_sheet()
 
-# =========================
+# Đọc toàn bộ dữ liệu hiện có để xử lý danh sách động
+data_all = ws.get_all_values()
+if len(data_all) > 1:
+    # Đồng bộ hóa tiêu đề hoặc gán mặc định nếu thiếu cột trên sheet
+    headers = data_all[0]
+    while len(headers) < 6:
+        headers.append(f"Cột_Trống_{len(headers)+1}")
+    
+    df_all = pd.DataFrame(data_all[1:], columns=headers[:len(data_all[0])])
+    # Đổi tên cột chuẩn hóa để tránh lỗi nếu người dùng gõ không khớp viết hoa viết thường
+    df_all.columns = [c.strip() for c in df_all.columns]
+    
+    list_dv_sheet = df_all['Đơn vị'].dropna().unique().tolist() if 'Đơn vị' in df_all.columns else []
+    list_pl_sheet = df_all['Phân loại'].dropna().unique().tolist() if 'Phân loại' in df_all.columns else []
+    list_ntt_sheet = df_all['Người thanh toán'].dropna().unique().tolist() if 'Người thanh toán' in df_all.columns else []
+else:
+    list_dv_sheet, list_pl_sheet, list_ntt_sheet = [], [], []
+
+# Thiết lập danh sách chọn (Mặc định + Phát sinh thêm từ Sheet)
+mac_dinh_dv = ["Ahamove", "Grab", "Lalamove", "GHTK", "GHN", "Viettel Post"]
+mac_dinh_pl = ["Đơn hàng bán", "Quà Hội viên", "Tài liệu"]
+mac_dinh_ntt = ["Quỳnh Như", "Như Ý", "Công ty CK"]
+
+if "ds_donvi" not in st.session_state:
+    st.session_state.ds_donvi = list(sorted(set(mac_dinh_dv + [x for x in list_dv_sheet if x])))
+if "ds_phanloai" not in st.session_state:
+    st.session_state.ds_phanloai = list(sorted(set(mac_dinh_pl + [x for x in list_pl_sheet if x])))
+if "ds_nguoitt" not in st.session_state:
+    st.session_state.ds_nguoitt = list(sorted(set(mac_dinh_ntt + [x for x in list_ntt_sheet if x])))
+
+# ==========================================
 # 5. SIDEBAR GIAO DIỆN
-# =========================
+# ==========================================
 with st.sidebar:
     st.markdown(f'''
     <div class="taskbar-box">
@@ -132,66 +165,88 @@ with st.sidebar:
     </div>
     ''', unsafe_allow_html=True)
 
-    st.header("⚙️ Cài đặt")
-    data_all = ws.get_all_values()
-    if len(data_all) > 1:
-        df_all = pd.DataFrame(data_all[1:], columns=data_all[0])
-        list_tu_sheet = df_all['Đơn vị'].unique().tolist()
-    else:
-        list_tu_sheet = []
-
-    mac_dinh = ["Ahamove", "Grab", "Lalamove", "GHTK", "GHN", "Viettel Post"]
-    if "ds_donvi" not in st.session_state:
-        st.session_state.ds_donvi = list(set(mac_dinh + list_tu_sheet))
-
-    new = st.text_input("Thêm đơn vị mới")
-    if st.button("➕ Thêm"):
-        if new and new not in st.session_state.ds_donvi:
-            st.session_state.ds_donvi.append(new)
+    st.header("⚙️ Cấu hình danh mục")
+    
+    # Quản lý Đơn vị vận chuyển
+    new_dv = st.text_input("Thêm Đơn vị mới")
+    if st.button("➕ Thêm ĐVVC"):
+        if new_dv and new_dv not in st.session_state.ds_donvi:
+            st.session_state.ds_donvi.append(new_dv)
+            st.rerun()
+            
+    # Quản lý Phân loại
+    new_pl = st.text_input("Thêm Phân loại mới")
+    if st.button("➕ Thêm Phân Loại"):
+        if new_pl and new_pl not in st.session_state.ds_phanloai:
+            st.session_state.ds_phanloai.append(new_pl)
             st.rerun()
 
-    if st.session_state.ds_donvi:
-        del_unit = st.selectbox("Xóa đơn vị khỏi danh sách chọn", st.session_state.ds_donvi)
-        if st.button("🗑 Xóa"):
-            st.session_state.ds_donvi.remove(del_unit)
+    # Quản lý Người thanh toán
+    new_ntt = st.text_input("Thêm Người thanh toán mới")
+    if st.button("➕ Thêm Người TT"):
+        if new_ntt and new_ntt not in st.session_state.ds_nguoitt:
+            st.session_state.ds_nguoitt.append(new_ntt)
             st.rerun()
 
-    if st.button("🔄 Làm tươi"):
+    st.write("---")
+    if st.button("🔄 Làm tươi hệ thống"):
         st.cache_resource.clear()
         st.rerun()
 
-# =========================
+# ==========================================
 # 6. NHẬP LIỆU & XỬ LÝ DỮ LIỆU
-# =========================
+# ==========================================
 st.title("🚚 CHI PHÍ GIAO HÀNG")
+
 with st.form("form_nhap", clear_on_submit=True):
-    c1, c2, c3 = st.columns([1, 3, 1])
-    ngay = c1.date_input("Ngày", dt.now())
-    nd = c2.text_input("Nội dung")
-    dv = c3.selectbox("Đơn vị", st.session_state.ds_donvi)
-    tien = c3.number_input("Phí (VNĐ)", min_value=0, step=1000)
+    row1_c1, row1_c2 = st.columns([1, 2])
+    ngay = row1_c1.date_input("Ngày", dt.now())
+    nd = row1_c2.text_input("Nội dung")
+    
+    row2_c1, row2_c2, row2_c3, row2_c4 = st.columns([1, 1, 1, 1])
+    dv = row2_c1.selectbox("Đơn vị VC", st.session_state.ds_donvi)
+    pl = row2_c2.selectbox("Phân loại chi phí", st.session_state.ds_phanloai)
+    ntt = row2_c3.selectbox("Người thanh toán", st.session_state.ds_nguoitt)
+    tien = row2_c4.number_input("Phí (VNĐ)", min_value=0, step=1000)
+    
     if st.form_submit_button("💾 Lưu dữ liệu"):
-        ws.append_row([ngay.strftime("%d/%m/%Y"), nd, dv, int(tien)])
+        # Ghi trực tiếp xuống 6 cột tương ứng trên Google Sheet
+        ws.append_row([
+            ngay.strftime("%d/%m/%Y"), 
+            nd, 
+            dv, 
+            int(tien), 
+            pl, 
+            ntt
+        ])
         st.cache_resource.clear()
         st.rerun()
 
-data = ws.get_all_values()
-if len(data) <= 1:
-    st.info("Chưa có dữ liệu")
+# Kiểm tra dữ liệu trống
+if len(data_all) <= 1:
+    st.info("Chưa có dữ liệu chi phí nào được ghi nhận.")
     st.stop()
 
-df = pd.DataFrame(data[1:], columns=data[0])
+# Đọc và ép kiểu dữ liệu bảng hiển thị
+df = pd.DataFrame(data_all[1:], columns=data_all[0])
+df.columns = [c.strip() for c in df.columns]
+
+# Đảm bảo dữ liệu các cột mới không bị lỗi nếu dòng cũ trống dữ liệu
+if 'Phân loại' not in df.columns: df['Phân loại'] = ""
+if 'Người thanh toán' not in df.columns: df['Người thanh toán'] = ""
+
 df["Phí (VNĐ)"] = df["Phí (VNĐ)"].apply(lambda x: int(re.sub(r"[^\d]", "", str(x)) or 0))
-df["Ngày"] = pd.to_datetime(df["Ngày"], format="%d/%m/%Y", errors="coerce")
-months = sorted(df["Ngày"].dt.strftime("%m/%Y").dropna().unique(), reverse=True)
+df["Ngày_DT"] = pd.to_datetime(df["Ngày"], format="%d/%m/%Y", errors="coerce")
+months = sorted(df["Ngày_DT"].dt.strftime("%m/%Y").dropna().unique(), reverse=True)
 
-thang = st.selectbox("📅 Chọn tháng", months)
+# Bộ chọn tháng hiển thị báo cáo
+thang = st.selectbox("📅 Chọn tháng xem dữ liệu", months)
 
-df_f = df[df["Ngày"].dt.strftime("%m/%Y") == thang]
-df_f = df_f.sort_values(by="Ngày", ascending=True)
+df_f = df[df["Ngày_DT"].dt.strftime("%m/%Y") == thang]
+df_f = df_f.sort_values(by="Ngày_DT", ascending=True)
 
 # ========================================================
-# 6.5. KHU VỰC ĐẶT NÚT SONG SONG (IN TRỰC TIẾP & XUẤT PDF)
+# 6.5. KHU VỰC IN TRỰC TIẾP & XUẤT PDF TRÊN TRANG WEB
 # ========================================================
 st.write(" ")
 btn_c1, btn_c2, btn_c3 = st.columns([1.5, 2, 8])
@@ -201,63 +256,45 @@ with btn_c1:
         components.html("<script>window.parent.print();</script>", height=0)
 
 with btn_c2:
-    # Thêm padding-top vào title-container để đẩy chữ xuống dưới, không sát lề
     def tao_giao_dien_html_full_width(dataframe, month_txt, total_amount):
         rows_html = ""
         for idx, (_, r) in enumerate(dataframe.iterrows(), start=1):
-            d_txt = r["Ngày"].strftime("%d/%m/%Y") if not pd.isna(r["Ngày"]) else ""
             rows_html += f"""
             <tr>
-                <td style='text-align: center; width: 6%;'>{idx}</td>
-                <td style='text-align: center; width: 14%;'>{d_txt}</td>
-                <td style='text-align: left; padding-left: 12px; width: 50%;'>{r['Nội dung']}</td>
-                <td style='text-align: center; width: 15%;'>{r['Đơn vị']}</td>
-                <td style='text-align: right; padding-right: 15px; font-weight: bold; width: 15%;'>{r['Phí (VNĐ)']:,}</td>
+                <td style='text-align: center; width: 5%;'>{idx}</td>
+                <td style='text-align: center; width: 11%;'>{r['Ngày']}</td>
+                <td style='text-align: left; padding-left: 8px; width: 34%;'>{r['Nội dung']}</td>
+                <td style='text-align: center; width: 12%;'>{r['Đơn vị']}</td>
+                <td style='text-align: center; width: 13%;'>{r['Phân loại']}</td>
+                <td style='text-align: center; width: 13%;'>{r['Người thanh toán']}</td>
+                <td style='text-align: right; padding-right: 12px; font-weight: bold; width: 12%;'>{r['Phí (VNĐ)']:,}</td>
             </tr>
             """
         
-        html_template = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <style>
-                @page {{ size: landscape; margin: 0; }}
-                body {{ font-family: 'Helvetica Neue', Arial, sans-serif; color: #333; margin: 0; padding: 0; width: 100%; }}
-                .title-container {{ text-align: center; padding-top: 30px; margin-bottom: 25px; width: 100%; }}
-                .print-title {{ color: #5B7E3C; font-size: 22pt; font-weight: bold; margin: 0; text-transform: uppercase; }}
-                table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; }}
-                th {{ background-color: #5B7E3C; color: white; font-weight: bold; font-size: 12pt; padding: 12px 6px; border: 1px solid #5B7E3C; }}
-                td {{ padding: 12px 6px; font-size: 11pt; border-bottom: 1px solid #eef2ec; color: #444; vertical-align: middle; }}
-                tr:nth-child(even) td {{ background-color: #fcfdfe; }}
-                .total-box {{ padding: 18px; border-radius: 10px; font-size: 15pt; font-weight: bold; text-align: center; background-color: #5B7E3C; color: white; margin-top: 15px; width: 100%; box-sizing: border-box; }}
-            </style>
-        </head>
-        <body>
-            <div class="title-container">
-                <h1 class="print-title">CHI PHÍ GIAO HÀNG - THÁNG {month_txt}</h1>
-            </div>
+        return f"""
+        <!DOCTYPE html><html><head><meta charset="utf-8">
+        <style>
+            @page {{ size: landscape; margin: 0; }}
+            body {{ font-family: Arial, sans-serif; color: #333; margin: 0; padding: 0; width: 100%; }}
+            .title-container {{ text-align: center; padding-top: 30px; margin-bottom: 25px; }}
+            .print-title {{ color: #5B7E3C; font-size: 22pt; font-weight: bold; text-transform: uppercase; }}
+            table {{ width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 20px; }}
+            th {{ background-color: #5B7E3C; color: white; font-weight: bold; font-size: 11pt; padding: 10px 4px; border: 1px solid #5B7E3C; }}
+            td {{ padding: 10px 4px; font-size: 10pt; border-bottom: 1px solid #eef2ec; vertical-align: middle; }}
+            tr:nth-child(even) td {{ background-color: #fcfdfe; }}
+            .total-box {{ padding: 15px; border-radius: 10px; font-size: 14pt; font-weight: bold; text-align: center; background-color: #5B7E3C; color: white; margin-top: 15px; }}
+        </style></head><body>
+            <div class="title-container"><h1 class="print-title">CHI PHÍ GIAO HÀNG - THÁNG {month_txt}</h1></div>
             <table style="padding: 0 10px;">
-                <thead>
-                    <tr>
-                        <th style="width: 6%;">STT</th>
-                        <th style="width: 14%;">Ngày</th>
-                        <th style="width: 50%; text-align: left; padding-left: 12px;">Nội dung</th>
-                        <th style="width: 15%;">ĐVVC</th>
-                        <th style="width: 15%;">Phí (VNĐ)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {rows_html}
-                </tbody>
+                <thead><tr>
+                    <th style="width: 5%;">STT</th><th style="width: 11%;">Ngày</th><th style="width: 34%;">Nội dung</th>
+                    <th style="width: 12%;">ĐVVC</th><th style="width: 13%;">Phân loại</th><th style="width: 13%;">Người TT</th><th style="width: 12%;">Phí (VNĐ)</th>
+                </tr></thead>
+                <tbody>{rows_html}</tbody>
             </table>
-            <div style="padding: 0 10px;">
-                <div class="total-box">💰 TỔNG CỘNG: {total_amount:,.0f} VNĐ</div>
-            </div>
-        </body>
-        </html>
+            <div style="padding: 0 10px;"><div class="total-box">💰 TỔNG CỘNG: {total_amount:,.0f} VNĐ</div></div>
+        </body></html>
         """
-        return html_template
 
     tong_tien = int(df_f["Phí (VNĐ)"].sum())
     dulieu_html = tao_giao_dien_html_full_width(df_f, thang, tong_tien)
@@ -270,34 +307,40 @@ with btn_c2:
     )
 
 # ========================================================
-# 7. HIỂN THỊ BẢNG DỮ LIỆU
+# 7. HIỂN THỊ BẢNG DỮ LIỆU ĐA CỘT MỚI
 # ========================================================
 st.markdown(f'<div class="print-title">CHI PHÍ GIAO HÀNG - THÁNG {thang}</div>', unsafe_allow_html=True)
 
-h1, h2, h3, h4, h5, h6 = st.columns([1, 2.5, 7, 3, 3, 1.5])
+# Điều chỉnh tỷ lệ cột sang 8 cột để hiển thị thông tin cân đối
+h1, h2, h3, h4, h5, h6, h7, h8 = st.columns([0.8, 1.8, 4.5, 1.8, 2.0, 2.0, 2.0, 1.2])
 h1.markdown('<div class="header-col header-left">STT</div>', unsafe_allow_html=True)
 h2.markdown('<div class="header-col">Ngày</div>', unsafe_allow_html=True)
 h3.markdown('<div class="header-col">Nội dung</div>', unsafe_allow_html=True)
 h4.markdown('<div class="header-col">ĐVVC</div>', unsafe_allow_html=True)
-h5.markdown('<div class="header-col">Phí</div>', unsafe_allow_html=True)
-h6.markdown('<div class="header-col header-right">Xóa</div>', unsafe_allow_html=True)
+h5.markdown('<div class="header-col">Phân loại</div>', unsafe_allow_html=True)
+h6.markdown('<div class="header-col">Người TT</div>', unsafe_allow_html=True)
+h7.markdown('<div class="header-col">Phí</div>', unsafe_allow_html=True)
+h8.markdown('<div class="header-col header-right">Xóa</div>', unsafe_allow_html=True)
 
 for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
-    ngay_txt = row["Ngày"].strftime("%d/%m/%Y") if not pd.isna(row["Ngày"]) else ""
-    c1, c2, c3, c4, c5, c6 = st.columns([1, 2.5, 7, 3, 3, 1.5])
+    c1, c2, c3, c4, c5, c6, c7, c8 = st.columns([0.8, 1.8, 4.5, 1.8, 2.0, 2.0, 2.0, 1.2])
     c1.markdown(f"<div class='row-style'>{idx}</div>", unsafe_allow_html=True)
-    c2.markdown(f"<div class='row-style'>{ngay_txt}</div>", unsafe_allow_html=True)
+    c2.markdown(f"<div class='row-style'>{row['Ngày']}</div>", unsafe_allow_html=True)
     c3.markdown(f"<div class='row-style' style='text-align:left; justify-content:flex-start; padding-left:10px;'>{row['Nội dung']}</div>", unsafe_allow_html=True)
     c4.markdown(f"<div class='row-style'>{row['Đơn vị']}</div>", unsafe_allow_html=True)
-    c5.markdown(f"<div class='row-style'><b>{row['Phí (VNĐ)']:,}</b></div>", unsafe_allow_html=True)
-    with c6:
+    c5.markdown(f"<div class='row-style'>{row['Phân loại']}</div>", unsafe_allow_html=True)
+    c6.markdown(f"<div class='row-style'>{row['Người thanh toán']}</div>", unsafe_allow_html=True)
+    c7.markdown(f"<div class='row-style'><b>{row['Phí (VNĐ)']:,}</b></div>", unsafe_allow_html=True)
+    
+    with c8:
         if st.button("❌", key=f"del_{i}"):
-            ws.delete_rows(i + 2)
+            ws.delete_rows(i + 2) # Dòng thực tế trên sheet = vị trí index + 2
             st.cache_resource.clear()
             st.rerun()
+            
     st.markdown('<hr style="margin:0; border:0.5px solid #f1f4ef;">', unsafe_allow_html=True)
 
-# =========================
+# ==========================================
 # 8. TỔNG CỘNG
-# =========================
+# ==========================================
 st.markdown(f'<div class="total-box">💰 TỔNG CHI PHÍ THÁNG {thang}: {tong_tien:,.0f} VNĐ</div>', unsafe_allow_html=True)
