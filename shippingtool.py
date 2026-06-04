@@ -330,14 +330,6 @@ tien_cty_ck = int(df_f[df_f["Người thanh toán"] == "Công ty CK"]["Phí (VN�
 tien_quynh_nhu = int(df_f[df_f["Người thanh toán"] == "Quỳnh Như"]["Phí (VNĐ)"].sum())
 tong_tien = int(df_f["Phí (VNĐ)"].sum())
 
-df_phat_sinh = df_f[~df_f["Người thanh toán"].isin(["Công ty CK", "Quỳnh Như"])]
-thong_tin_them = ""
-if not df_phat_sinh.empty:
-    nhom_phat_sinh = df_phat_sinh.groupby("Người thanh toán")["Phí (VNĐ)"].sum()
-    for name, money in nhom_phat_sinh.items():
-        if name.strip():
-            thong_tin_them += f" • Khác ({name}): {int(money):,} VNĐ"
-
 
 # ========================================================
 # 6.1. TIÊU ĐỀ IN TRÊN CÙNG (Chỉ hiển thị khi bấm In)
@@ -352,6 +344,7 @@ st.html(
     f"""
     <div class="kpi-wrapper">
         <div class="kpi-container">
+            <!-- Card 1 -->
             <div class="kpi-card">
                 <div class="kpi-header">🏢 SỐ TIỀN CÔNG TY CẦN CHUYỂN KHOẢN</div>
                 <div class="kpi-body">
@@ -360,6 +353,7 @@ st.html(
                 </div>
             </div>
             
+            <!-- Card 2 -->
             <div class="kpi-card">
                 <div class="kpi-header">👩‍💼 SỐ TIỀN CẦN TRẢ LẠI CHO QUỲNH NHƯ</div>
                 <div class="kpi-body">
@@ -421,6 +415,7 @@ with btn_c2:
         </style></head><body>
             <div class="title-container"><h1 class="print-title">CHI PHÍ GIAO HÀNG - THÁNG {month_txt}</h1></div>
             
+            <!-- Hiển thị 2 Card KPI chính giữa gọn gàng giống hệt trên Web -->
             <div class="kpi-wrapper">
                 <div class="kpi-container">
                     <div class="kpi-card">
@@ -493,4 +488,4 @@ for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
 # ==========================================
 # 8. TỔNG CỘNG
 # ==========================================
-st.markdown(f'<div class="total-box">💰 TỔNG CHI PHÍ THÁNG {thang}: {tong_tien:,.0f} VNĐ {thong_tin_them}</div>', unsafe_allow_html=True)
+st.markdown(f'<div class="total-box">💰 TỔNG CHI PHÍ THÁNG {thang}: {tong_tien:,.0f} VNĐ</div>', unsafe_allow_html=True)
