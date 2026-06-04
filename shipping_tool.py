@@ -29,7 +29,7 @@ else:
     thoi_tiet = "Trời đêm mát mẻ ✨"
 
 # ==========================================
-# 3. STYLE CSS TỔNG HỢP GIAO DIỆN WEB
+# 3. STYLE CSS TỔNG HỢP GIAO DIỆN WEB & CARD KPI
 # ==========================================
 st.markdown("""
 <style>
@@ -69,6 +69,46 @@ st.markdown("""
     }
     .print-title { display: none; }
 
+    /* CSS CHO KHỐI THÔNG TIN CARD KPI KẾ TOÁN */
+    .kpi-container {
+        display: flex;
+        gap: 20px;
+        margin-top: 10px;
+        margin-bottom: 25px;
+    }
+    .kpi-card {
+        flex: 1;
+        background-color: #ffffff;
+        border: 2px solid #5B7E3C;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+        text-align: center;
+    }
+    .kpi-header {
+        background-color: #5B7E3C;
+        color: #ffffff;
+        font-size: 15px;
+        font-weight: 700;
+        padding: 12px 5px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .kpi-body {
+        padding: 20px 10px;
+    }
+    .kpi-value {
+        font-size: 32px;
+        color: #222222;
+        font-weight: 700;
+        font-family: 'Segoe UI', Arial, sans-serif;
+    }
+    .kpi-unit {
+        font-size: 13px;
+        color: #666666;
+        margin-top: 4px;
+    }
+
     @media print {
         @page { size: landscape; margin: 0 !important; }
         body { margin: 0 !important; padding: 0 !important; }
@@ -84,7 +124,7 @@ st.markdown("""
             margin-top: 10px !important; margin-bottom: 30px !important; font-size: 24px !important; font-weight: bold !important;
         }
         div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; width: 100% !important; gap: 0px !important; }
-        div[data-testid="stHorizontalBlock"] > div:nth-child(8) { display: none !important; } /* Ẩn cột xóa khi in */
+        div[data-testid="stHorizontalBlock"] > div:nth-child(8) { display: none !important; }
         div[data-testid="stHorizontalBlock"] > div:nth-child(1) { width: 5% !important; max-width: 5% !important; flex: 0 0 5% !important; }
         div[data-testid="stHorizontalBlock"] > div:nth-child(2) { width: 11% !important; max-width: 11% !important; flex: 0 0 11% !important; }
         div[data-testid="stHorizontalBlock"] > div:nth-child(3) { width: 34% !important; max-width: 34% !important; flex: 0 0 34% !important; }
@@ -101,7 +141,7 @@ st.markdown("""
 # ==========================================
 # 4. KẾT NỐI GOOGLE SHEETS
 # ==========================================
-SHEET_ID = "1pX1uImwD770upHdJ4OKNzYxwKxd5qVeI2zQeW0SBLUg"
+SHEET_ID = "1pX1uImwD770upHdJ4OKNzYxwKxd5C_VeI2zQeW0SBLUg"
 
 @st.cache_resource
 def ket_noi_sheet():
@@ -123,13 +163,11 @@ ws = ket_noi_sheet()
 # Đọc toàn bộ dữ liệu hiện có để xử lý danh sách động
 data_all = ws.get_all_values()
 if len(data_all) > 1:
-    # Đồng bộ hóa tiêu đề hoặc gán mặc định nếu thiếu cột trên sheet
     headers = data_all[0]
     while len(headers) < 6:
         headers.append(f"Cột_Trống_{len(headers)+1}")
     
     df_all = pd.DataFrame(data_all[1:], columns=headers[:len(data_all[0])])
-    # Đổi tên cột chuẩn hóa để tránh lỗi nếu người dùng gõ không khớp viết hoa viết thường
     df_all.columns = [c.strip() for c in df_all.columns]
     
     list_dv_sheet = df_all['Đơn vị'].dropna().unique().tolist() if 'Đơn vị' in df_all.columns else []
@@ -141,7 +179,7 @@ else:
 # Thiết lập danh sách chọn (Mặc định + Phát sinh thêm từ Sheet)
 mac_dinh_dv = ["Ahamove", "Grab", "Lalamove", "GHTK", "GHN", "Viettel Post"]
 mac_dinh_pl = ["Đơn hàng bán", "Quà Hội viên", "Tài liệu"]
-mac_dinh_ntt = ["Quỳnh Như", "Như Ý", "Công ty CK"]
+mac_dinh_ntt = ["Quỳnh Như", "Công ty CK"]
 
 if "ds_donvi" not in st.session_state:
     st.session_state.ds_donvi = list(sorted(set(mac_dinh_dv + [x for x in list_dv_sheet if x])))
@@ -167,21 +205,18 @@ with st.sidebar:
 
     st.header("⚙️ Cấu hình danh mục")
     
-    # Quản lý Đơn vị vận chuyển
     new_dv = st.text_input("Thêm Đơn vị mới")
     if st.button("➕ Thêm ĐVVC"):
         if new_dv and new_dv not in st.session_state.ds_donvi:
             st.session_state.ds_donvi.append(new_dv)
             st.rerun()
             
-    # Quản lý Phân loại
     new_pl = st.text_input("Thêm Phân loại mới")
     if st.button("➕ Thêm Phân Loại"):
         if new_pl and new_pl not in st.session_state.ds_phanloai:
             st.session_state.ds_phanloai.append(new_pl)
             st.rerun()
 
-    # Quản lý Người thanh toán
     new_ntt = st.text_input("Thêm Người thanh toán mới")
     if st.button("➕ Thêm Người TT"):
         if new_ntt and new_ntt not in st.session_state.ds_nguoitt:
@@ -210,7 +245,6 @@ with st.form("form_nhap", clear_on_submit=True):
     tien = row2_c4.number_input("Phí (VNĐ)", min_value=0, step=1000)
     
     if st.form_submit_button("💾 Lưu dữ liệu"):
-        # Ghi trực tiếp xuống 6 cột tương ứng trên Google Sheet
         ws.append_row([
             ngay.strftime("%d/%m/%Y"), 
             nd, 
@@ -222,32 +256,68 @@ with st.form("form_nhap", clear_on_submit=True):
         st.cache_resource.clear()
         st.rerun()
 
-# Kiểm tra dữ liệu trống
 if len(data_all) <= 1:
     st.info("Chưa có dữ liệu chi phí nào được ghi nhận.")
     st.stop()
 
-# Đọc và ép kiểu dữ liệu bảng hiển thị
 df = pd.DataFrame(data_all[1:], columns=data_all[0])
 df.columns = [c.strip() for c in df.columns]
 
-# Đảm bảo dữ liệu các cột mới không bị lỗi nếu dòng cũ trống dữ liệu
 if 'Phân loại' not in df.columns: df['Phân loại'] = ""
 if 'Người thanh toán' not in df.columns: df['Người thanh toán'] = ""
 
 df["Phí (VNĐ)"] = df["Phí (VNĐ)"].apply(lambda x: int(re.sub(r"[^\d]", "", str(x)) or 0))
-df["Ngày_DT"] = pd.to_datetime(df["Ngày"], format="%d/%m/%Y", errors="coerce")
-months = sorted(df["Ngày_DT"].dt.strftime("%m/%Y").dropna().unique(), reverse=True)
+df["開設_DT"] = pd.to_datetime(df["Ngày"], format="%d/%m/%Y", errors="coerce")
+months = sorted(df["開設_DT"].dt.strftime("%m/%Y").dropna().unique(), reverse=True)
 
-# Bộ chọn tháng hiển thị báo cáo
 thang = st.selectbox("📅 Chọn tháng xem dữ liệu", months)
 
-df_f = df[df["Ngày_DT"].dt.strftime("%m/%Y") == thang]
-df_f = df_f.sort_values(by="Ngày_DT", ascending=True)
+df_f = df[df["開設_DT"].dt.strftime("%m/%Y") == thang]
+df_f = df_f.sort_values(by="開設_DT", ascending=True)
 
-# ========================================================
-# 6.5. KHU VỰC IN TRỰC TIẾP & XUẤT PDF TRÊN TRANG WEB
-# ========================================================
+# --- PHÂN TÍCH SỐ TIỀN THEO ĐỐI TƯỢNG (DÙNG CHO CARD KPI KẾ TOÁN) ---
+tien_cty_ck = int(df_f[df_f["Người thanh toán"] == "Công ty CK"]["Phí (VNĐ)"].sum())
+tien_quynh_nhu = int(df_f[df_f["Người thanh toán"] == "Quỳnh Như"]["Phí (VNĐ)"].sum())
+tong_tien = int(df_f["Phí (VNĐ)"].sum())
+
+# Lấy tiền của những người thanh toán phát sinh khác (nếu có ngoài Công ty CK và Quỳnh Như)
+df_phat_sinh = df_f[~df_f["Người thanh toán"].isin(["Công ty CK", "Quỳnh Như"])]
+thong_tin_them = ""
+if not df_phat_sinh.empty:
+    nhom_phat_sinh = df_phat_sinh.groupby("Người thanh toán")["Phí (VNĐ)"].sum()
+    for name, money in nhom_phat_sinh.items():
+        if name.strip():
+            thong_tin_them += f" • Khác ({name}): {int(money):,} VNĐ"
+
+# ==========================================
+# 6.2. HIỂN THỊ CÁC CARD TỔNG TIỀN CHO KẾ TOÁN
+# ==========================================
+st.markdown("### 📊 Số liệu thanh toán cho Kế toán")
+st.html(
+    f"""
+    <div class="kpi-container">
+        <!-- Card 1 -->
+        <div class="kpi-card">
+            <div class="kpi-header">🏢 SỐ TIỀN CÔNG TY CẦN CHUYỂN KHOẢN</div>
+            <div class="kpi-body">
+                <div class="kpi-value" style="color: #2e7d32;">{tien_cty_ck:,}</div>
+                <div class="kpi-unit">VNĐ (Hãng vận chuyển trừ trực tiếp tài khoản công ty)</div>
+            </div>
+        </div>
+        
+        <!-- Card 2 -->
+        <div class="kpi-card">
+            <div class="kpi-header">👩‍💼 SỐ TIỀN CẦN TRẢ LẠI CHO QUỲNH NHƯ</div>
+            <div class="kpi-body">
+                <div class="kpi-value" style="color: #e65100;">{tien_quynh_nhu:,}</div>
+                <div class="kpi-unit">VNĐ (Quỳnh Như đã ứng tiền mặt chi hộ)</div>
+            </div>
+        </div>
+    </div>
+    """
+)
+
+# Nút In & Xuất file
 st.write(" ")
 btn_c1, btn_c2, btn_c3 = st.columns([1.5, 2, 8])
 
@@ -256,7 +326,7 @@ with btn_c1:
         components.html("<script>window.parent.print();</script>", height=0)
 
 with btn_c2:
-    def tao_giao_dien_html_full_width(dataframe, month_txt, total_amount):
+    def tao_giao_dien_html_full_width(dataframe, month_txt, total_amount, cty, qnhu):
         rows_html = ""
         for idx, (_, r) in enumerate(dataframe.iterrows(), start=1):
             rows_html += f"""
@@ -282,9 +352,11 @@ with btn_c2:
             th {{ background-color: #5B7E3C; color: white; font-weight: bold; font-size: 11pt; padding: 10px 4px; border: 1px solid #5B7E3C; }}
             td {{ padding: 10px 4px; font-size: 10pt; border-bottom: 1px solid #eef2ec; vertical-align: middle; }}
             tr:nth-child(even) td {{ background-color: #fcfdfe; }}
+            .summary-text {{ font-size: 12pt; margin: 10px 15px; color: #444; font-weight: bold; text-align: left; }}
             .total-box {{ padding: 15px; border-radius: 10px; font-size: 14pt; font-weight: bold; text-align: center; background-color: #5B7E3C; color: white; margin-top: 15px; }}
         </style></head><body>
             <div class="title-container"><h1 class="print-title">CHI PHÍ GIAO HÀNG - THÁNG {month_txt}</h1></div>
+            <div class="summary-text">📍 Thống kê nguồn chi: Công ty CK: {cty:,} đ | Quỳnh Như hoàn trả: {qnhu:,} đ</div>
             <table style="padding: 0 10px;">
                 <thead><tr>
                     <th style="width: 5%;">STT</th><th style="width: 11%;">Ngày</th><th style="width: 34%;">Nội dung</th>
@@ -292,13 +364,11 @@ with btn_c2:
                 </tr></thead>
                 <tbody>{rows_html}</tbody>
             </table>
-            <div style="padding: 0 10px;"><div class="total-box">💰 TỔNG CỘNG: {total_amount:,.0f} VNĐ</div></div>
+            <div style="padding: 0 10px;"><div class="total-box">💰 TỔNG CỘNG CHI PHÍ: {total_amount:,.0f} VNĐ</div></div>
         </body></html>
         """
 
-    tong_tien = int(df_f["Phí (VNĐ)"].sum())
-    dulieu_html = tao_giao_dien_html_full_width(df_f, thang, tong_tien)
-    
+    dulieu_html = tao_giao_dien_html_full_width(df_f, thang, tong_tien, tien_cty_ck, tien_quynh_nhu)
     st.download_button(
         label="📥 Xuất file PDF",
         data=dulieu_html,
@@ -311,7 +381,6 @@ with btn_c2:
 # ========================================================
 st.markdown(f'<div class="print-title">CHI PHÍ GIAO HÀNG - THÁNG {thang}</div>', unsafe_allow_html=True)
 
-# Điều chỉnh tỷ lệ cột sang 8 cột để hiển thị thông tin cân đối
 h1, h2, h3, h4, h5, h6, h7, h8 = st.columns([0.8, 1.8, 4.5, 1.8, 2.0, 2.0, 2.0, 1.2])
 h1.markdown('<div class="header-col header-left">STT</div>', unsafe_allow_html=True)
 h2.markdown('<div class="header-col">Ngày</div>', unsafe_allow_html=True)
@@ -334,7 +403,7 @@ for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
     
     with c8:
         if st.button("❌", key=f"del_{i}"):
-            ws.delete_rows(i + 2) # Dòng thực tế trên sheet = vị trí index + 2
+            ws.delete_rows(i + 2)
             st.cache_resource.clear()
             st.rerun()
             
@@ -343,4 +412,4 @@ for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
 # ==========================================
 # 8. TỔNG CỘNG
 # ==========================================
-st.markdown(f'<div class="total-box">💰 TỔNG CHI PHÍ THÁNG {thang}: {tong_tien:,.0f} VNĐ</div>', unsafe_allow_html=True)
+st.markdown(f'<div class="total-box">💰 TỔNG CHI PHÍ THÁNG {thang}: {tong_tien:,.0f} VNĐ {thong_tin_them}</div>', unsafe_allow_html=True)
