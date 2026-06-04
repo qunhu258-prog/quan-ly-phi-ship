@@ -84,6 +84,9 @@ st.markdown("""
     @media print {
         @page { size: landscape; margin: 6mm 10mm !important; }
         
+        /* Ẩn tiêu đề h1 lớn lúc nhập liệu */
+        h1, [data-testid="stHeader"]+div h1 { display: none !important; }
+
         /* Ẩn thanh công cụ mặc định của Streamlit */
         header, [data-testid="stHeader"], .stAppHeader, footer, [data-testid="stToolbar"] {
             display: none !important; height: 0 !important; opacity: 0 !important;
@@ -117,17 +120,18 @@ st.markdown("""
         /* Ẩn cột hành động XÓA cuối cùng của bảng khi in */
         div[data-testid="stHorizontalBlock"] > div:nth-last-child(1) { display: none !important; }
 
-        /* Tự động chia lại tỷ lệ các cột dữ liệu còn lại cho vừa trang Landscape */
+        /* Tối ưu lại tỷ lệ các cột để tiền không bị rớt dòng */
         div[data-testid="stHorizontalBlock"] > div:nth-child(1) { width: 6% !important; max-width: 6% !important; flex: 0 0 6% !important; }
         div[data-testid="stHorizontalBlock"] > div:nth-child(2) { width: 12% !important; max-width: 12% !important; flex: 0 0 12% !important; }
-        div[data-testid="stHorizontalBlock"] > div:nth-child(3) { width: 38% !important; max-width: 38% !important; flex: 0 0 38% !important; }
-        div[data-testid="stHorizontalBlock"] > div:nth-child(4) { width: 11% !important; max-width: 11% !important; flex: 0 0 11% !important; }
+        div[data-testid="stHorizontalBlock"] > div:nth-child(3) { width: 36% !important; max-width: 36% !important; flex: 0 0 38% !important; }
+        div[data-testid="stHorizontalBlock"] > div:nth-child(4) { width: 10% !important; max-width: 10% !important; flex: 0 0 11% !important; }
         div[data-testid="stHorizontalBlock"] > div:nth-child(5) { width: 11% !important; max-width: 11% !important; flex: 0 0 11% !important; }
         div[data-testid="stHorizontalBlock"] > div:nth-child(6) { width: 11% !important; max-width: 11% !important; flex: 0 0 11% !important; }
-        div[data-testid="stHorizontalBlock"] > div:nth-child(7) { width: 11% !important; max-width: 11% !important; flex: 0 0 11% !important; border-right: none !important; }
+        /* Cột số tiền (Cột 7) nới rộng thêm diện tích */
+        div[data-testid="stHorizontalBlock"] > div:nth-child(7) { width: 14% !important; max-width: 14% !important; flex: 0 0 14% !important; border-right: none !important; }
         
         div[data-testid="stHorizontalBlock"]:has(.header-col) > div:nth-child(7) .header-col { border-radius: 0 8px 0 0 !important; }
-        .row-style, .header-col { font-size: 14px !important; padding: 6px 2px !important; }
+        .row-style, .header-col { font-size: 14px !important; padding: 6px 2px !important; white-space: nowrap !important; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -268,7 +272,7 @@ df_f = df[df["Ngày_DT"].dt.strftime("%m/%Y") == thang]
 df_f = df_f.sort_values(by="Ngày_DT", ascending=True)
 
 # --- SỐ TIỀN THEO ĐỐI TƯỢNG CHO CARD KPI ---
-tien_cty_ck = int(df_f[df_f["Keep Người thanh toán"] == "Công ty CK"]["Phí (VNĐ)"].sum() if "Keep Người thanh toán" in df_f.columns else df_f[df_f["Người thanh toán"] == "Công ty CK"]["Phí (VNĐ)"].sum())
+tien_cty_ck = int(df_f[df_f["Người thanh toán"] == "Công ty CK"]["Phí (VNĐ)"].sum())
 tien_quynh_nhu = int(df_f[df_f["Người thanh toán"] == "Quỳnh Như"]["Phí (VNĐ)"].sum())
 tong_tien = int(df_f["Phí (VNĐ)"].sum())
 
