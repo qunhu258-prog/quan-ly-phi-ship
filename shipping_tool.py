@@ -29,7 +29,7 @@ else:
     thoi_tiet = "Trời đêm mát mẻ ✨"
 
 # ==========================================
-# 3. STYLE CSS TỔNG HỢP GIAO DIỆN WEB & CARD KPI
+# 3. STYLE CSS TỔNG HỢP GIAO DIỆN WEB & CARD KPI & SỬA LỖI IN
 # ==========================================
 st.markdown("""
 <style>
@@ -82,7 +82,7 @@ st.markdown("""
         border: 2px solid #5B7E3C;
         border-radius: 8px;
         overflow: hidden;
-        box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+        box-shadow: 0 3px 8 rgba(0,0,0,0.06);
         text-align: center;
     }
     .kpi-header {
@@ -109,20 +109,51 @@ st.markdown("""
         margin-top: 4px;
     }
 
+    /* ==========================================
+       XỬ LÝ TRIỆT ĐỂ LỖI KHOẢNG TRỐNG KHI IN 🖨️
+       ========================================== */
     @media print {
-        @page { size: landscape; margin: 0 !important; }
-        body { margin: 0 !important; padding: 0 !important; }
-        section[data-testid="stSidebar"], div[data-testid="stForm"], div.stSelectbox,
-        header, footer, h1, iframe, [data-testid="stHeader"], div.stButton,
-        div[data-testid="stElementContainer"] button { display: none !important; }
+        @page { size: landscape; margin: 10mm 15mm !important; }
+        
+        /* Ẩn hoàn toàn tất cả các thành phần thừa bao gồm cả vùng chứa trống */
+        section[data-testid="stSidebar"], 
+        div[data-testid="stForm"], 
+        div.stSelectbox,
+        header, 
+        footer, 
+        h1, 
+        iframe, 
+        [data-testid="stHeader"], 
+        div.stButton,
+        div[data-testid="stElementContainer"]:has(button),
+        div:has(> .stForm) { 
+            display: none !important; 
+            height: 0 !important; 
+            margin: 0 !important; 
+            padding: 0 !important; 
+        }
+        
+        /* Triệt tiêu khoảng trống phía trên do khung chứa Streamlit tạo ra */
         .main, .main .block-container, [data-testid="stMainBlockContainer"] {
-            padding-top: 15mm !important; padding-left: 15mm !important; padding-right: 15mm !important;
-            margin: 0px !important; top: 0px !important;
+            padding-top: 0px !important; 
+            padding-left: 0px !important; 
+            padding-right: 0px !important;
+            margin: 0px !important; 
+            top: 0px !important;
         }
+
+        /* Tiêu đề in chuyên dụng đẩy lên đầu trang */
         .print-title {
-            display: block !important; color: #5B7E3C !important; text-align: center !important;
-            margin-top: 10px !important; margin-bottom: 30px !important; font-size: 24px !important; font-weight: bold !important;
+            display: block !important; 
+            color: #5B7E3C !important; 
+            text-align: center !important;
+            margin-top: 0px !important; 
+            margin-bottom: 25px !important; 
+            font-size: 24px !important; 
+            font-weight: bold !important;
         }
+
+        /* Định dạng lại bảng và dòng dữ liệu cân đối */
         div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; width: 100% !important; gap: 0px !important; }
         div[data-testid="stHorizontalBlock"] > div:nth-child(8) { display: none !important; }
         div[data-testid="stHorizontalBlock"] > div:nth-child(1) { width: 5% !important; max-width: 5% !important; flex: 0 0 5% !important; }
@@ -160,7 +191,6 @@ def ket_noi_sheet():
 
 ws = ket_noi_sheet()
 
-# Đọc toàn bộ dữ liệu hiện có để xử lý danh sách động
 data_all = ws.get_all_values()
 if len(data_all) > 1:
     headers = data_all[0]
@@ -176,7 +206,6 @@ if len(data_all) > 1:
 else:
     list_dv_sheet, list_pl_sheet, list_ntt_sheet = [], [], []
 
-# Thiết lập danh sách chọn (Mặc định + Phát sinh thêm từ Sheet)
 mac_dinh_dv = ["Ahamove", "Grab", "Lalamove", "GHTK", "GHN", "Viettel Post"]
 mac_dinh_pl = ["Đơn hàng bán", "Quà Hội viên", "Tài liệu"]
 mac_dinh_ntt = ["Quỳnh Như", "Công ty CK"]
@@ -267,20 +296,19 @@ if 'Phân loại' not in df.columns: df['Phân loại'] = ""
 if 'Người thanh toán' not in df.columns: df['Người thanh toán'] = ""
 
 df["Phí (VNĐ)"] = df["Phí (VNĐ)"].apply(lambda x: int(re.sub(r"[^\d]", "", str(x)) or 0))
-df["開設_DT"] = pd.to_datetime(df["Ngày"], format="%d/%m/%Y", errors="coerce")
-months = sorted(df["開設_DT"].dt.strftime("%m/%Y").dropna().unique(), reverse=True)
+df["Ngày_DT"] = pd.to_datetime(df["Ngày"], format="%d/%m/%Y", errors="coerce")
+months = sorted(df["Ngày_DT"].dt.strftime("%m/%Y").dropna().unique(), reverse=True)
 
 thang = st.selectbox("📅 Chọn tháng xem dữ liệu", months)
 
-df_f = df[df["開設_DT"].dt.strftime("%m/%Y") == thang]
-df_f = df_f.sort_values(by="開設_DT", ascending=True)
+df_f = df[df["Ngày_DT"].dt.strftime("%m/%Y") == thang]
+df_f = df_f.sort_values(by="Ngày_DT", ascending=True)
 
-# --- PHÂN TÍCH SỐ TIỀN THEO ĐỐI TƯỢNG (DÙNG CHO CARD KPI KẾ TOÁN) ---
+# --- SỐ TIỀN THEO ĐỐI TƯỢNG CHO CARD KPI ---
 tien_cty_ck = int(df_f[df_f["Người thanh toán"] == "Công ty CK"]["Phí (VNĐ)"].sum())
 tien_quynh_nhu = int(df_f[df_f["Người thanh toán"] == "Quỳnh Như"]["Phí (VNĐ)"].sum())
 tong_tien = int(df_f["Phí (VNĐ)"].sum())
 
-# Lấy tiền của những người thanh toán phát sinh khác (nếu có ngoài Công ty CK và Quỳnh Như)
 df_phat_sinh = df_f[~df_f["Người thanh toán"].isin(["Công ty CK", "Quỳnh Như"])]
 thong_tin_them = ""
 if not df_phat_sinh.empty:
@@ -298,19 +326,19 @@ st.html(
     <div class="kpi-container">
         <!-- Card 1 -->
         <div class="kpi-card">
-            <div class="kpi-header">🏢 CÔNG TY THANH TOÁN</div>
+            <div class="kpi-header">🏢 SỐ TIỀN CÔNG TY CẦN CHUYỂN KHOẢN</div>
             <div class="kpi-body">
                 <div class="kpi-value" style="color: #2e7d32;">{tien_cty_ck:,}</div>
-                <div class="kpi-unit">VNĐ (Hóa đơn Viettel Post)</div>
+                <div class="kpi-unit">VNĐ (Hãng vận chuyển trừ trực tiếp tài khoản công ty)</div>
             </div>
         </div>
         
         <!-- Card 2 -->
         <div class="kpi-card">
-            <div class="kpi-header">👩‍💼 QUỲNH NHƯ THANH TOÁN</div>
+            <div class="kpi-header">👩‍💼 SỐ TIỀN CẦN TRẢ LẠI CHO QUỲNH NHƯ</div>
             <div class="kpi-body">
                 <div class="kpi-value" style="color: #e65100;">{tien_quynh_nhu:,}</div>
-                <div class="kpi-unit">VNĐ (Quỳnh Như đã chi hộ)</div>
+                <div class="kpi-unit">VNĐ (Quỳnh Như đã ứng tiền mặt chi hộ)</div>
             </div>
         </div>
     </div>
