@@ -1,4 +1,4 @@
-import streamlit as st
+﻿import streamlit as st
 import gspread
 import pandas as pd
 import re
@@ -189,10 +189,10 @@ st.markdown("""
 # ==========================================
 # 4. KẾT NỐI GOOGLE SHEETS
 # ==========================================
-SHEET_ID = "1pX1uImwD770upHdJ4OKNzYxwKxd5C_VeI2zQeW0SBLUg"
+MANG_SHEET_ID = "1pX1uImwD770upHdJ4OKNzYxwKxd5C_VeI2zQeW0SBLU"
 
 @st.cache_resource
-def ket_noi_sheet():
+def ket_noi_sheet(sheet_id_key):
     s = st.secrets
     creds_dict = {
         "type": s["type"], "project_id": s["project_id"], "private_key_id": s["private_key_id"],
@@ -204,9 +204,9 @@ def ket_noi_sheet():
     scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
     creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
     gc = gspread.authorize(creds)
-    return gc.open_by_key(SHEET_ID).sheet1
+    return gc.open_by_key(sheet_id_key).sheet1
 
-ws = ket_noi_sheet()
+ws = ket_noi_sheet(MANG_SHEET_ID)
 
 data_all = ws.get_all_values()
 if len(data_all) > 1:
@@ -392,7 +392,7 @@ with btn_c2:
             </tr>
             """
         
-        # Tạo giao diện HTML xuất file PDF đồng bộ y hệt form in
+        # Đồng bộ mẫu xuất PDF y chang giao diện form in
         return f"""
         <!DOCTYPE html><html><head><meta charset="utf-8">
         <style>
@@ -401,7 +401,7 @@ with btn_c2:
             .title-container {{ text-align: center; margin-top: 0px; margin-bottom: 25px; }}
             .print-title {{ color: #5B7E3C; font-size: 26px; font-weight: bold; text-transform: uppercase; }}
             
-            /* CSS Card KPI cho PDF co nhỏ vào giữa */
+            /* CSS Card KPI cho file HTML đồng bộ co nhỏ vào giữa */
             .kpi-wrapper {{ max-width: 900px; margin: 0 auto 25px auto; padding: 0 10px; }}
             .kpi-container {{ display: flex; gap: 20px; }}
             .kpi-card {{ flex: 1; background-color: #ffffff; border: 2px solid #5B7E3C; border-radius: 8px; overflow: hidden; text-align: center; }}
