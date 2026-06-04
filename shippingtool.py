@@ -379,54 +379,60 @@ with btn_c1:
         components.html("<script>window.parent.print();</script>", height=0)
 
 with btn_c2:
-    def tao_giao_dien_html_full_width(dataframe, month_txt, total_amount, cty, qnhu):
+    from io import BytesIO
+    from xhtml2pdf import pisa
+
+    def tao_file_pdf_that(dataframe, month_txt, total_amount, cty, qnhu):
         rows_html = ""
         for idx, (_, r) in enumerate(dataframe.iterrows(), start=1):
             rows_html += f"""
             <tr>
                 <td style='text-align: center; width: 5%;'>{idx}</td>
                 <td style='text-align: center; width: 11%;'>{r['Ngày']}</td>
-                <td style='text-align: left; padding-left: 8px; width: 34%;'>{r['Nội dung']}</td>
+                <td style='text-align: left; padding-left: 5px; width: 34%;'>{r['Nội dung']}</td>
                 <td style='text-align: center; width: 12%;'>{r['Đơn vị']}</td>
                 <td style='text-align: center; width: 13%;'>{r['Phân loại']}</td>
                 <td style='text-align: center; width: 13%;'>{r['Người thanh toán']}</td>
-                <td style='text-align: right; padding-right: 12px; font-weight: bold; width: 12%;'>{r['Phí (VNĐ)']:,}</td>
+                <td style='text-align: right; padding-right: 5px; font-weight: bold; width: 12%;'>{r['Phí (VNĐ)']:,}</td>
             </tr>
             """
         
-        return f"""
+        html_content = f"""
         <!DOCTYPE html><html><head><meta charset="utf-8">
         <style>
-            @page {{ size: landscape; margin: 0; }}
-            body {{ font-family: Arial, sans-serif; color: #333; margin: 0; padding: 0; width: 100%; }}
-            .title-container {{ text-align: center; padding-top: 30px; margin-bottom: 25px; }}
-            .print-title {{ color: #5B7E3C; font-size: 22pt; font-weight: bold; text-transform: uppercase; }}
-            table {{ width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 20px; }}
-            th {{ background-color: #5B7E3C; color: white; font-weight: bold; font-size: 11pt; padding: 10px 4px; border: 1px solid #5B7E3C; }}
-            td {{ padding: 10px 4px; font-size: 10pt; border-bottom: 1px solid #eef2ec; vertical-align: middle; }}
-            tr:nth-child(even) td {{ background-color: #fcfdfe; }}
-            .summary-text {{ font-size: 12pt; margin: 10px 15px; color: #444; font-weight: bold; text-align: left; }}
-            .total-box {{ padding: 15px; border-radius: 10px; font-size: 14pt; font-weight: bold; text-align: center; background-color: #5B7E3C; color: white; margin-top: 15px; }}
+            @page {{ size: letter landscape; margin: 1cm; }}
+            body {{ font-family: Helvetica, Arial, sans-serif; color: #333; }}
+            .print-title {{ color: #5B7E3C; font-size: 22px; font-weight: bold; text-align: center; text-transform: uppercase; margin-bottom: 15px; }}
+            .summary-text {{ font-size: 13px; margin-bottom: 15px; font-weight: bold; color: #444; }}
+            table {{ width: 100%; border-collapse: collapse; }}
+            th {{ background-color: #5B7E3C; color: white; font-weight: bold; font-size: 12px; padding: 8px 4px; border: 1px solid #5B7E3C; }}
+            td {{ padding: 8px 4px; font-size: 11px; border: 1px solid #eef2ec; }}
+            .total-box {{ padding: 12px; font-size: 15px; font-weight: bold; text-align: center; background-color: #5B7E3C; color: white; margin-top: 15px; }}
         </style></head><body>
-            <div class="title-container"><h1 class="print-title">CHI PHÍ GIAO HÀNG - THÁNG {month_txt}</h1></div>
+            <div class="print-title">CHI PHÍ GIAO HÀNG - THÁNG {month_txt}</div>
             <div class="summary-text">📍 Thống kê nguồn chi: Công ty CK: {cty:,} đ | Quỳnh Như hoàn trả: {qnhu:,} đ</div>
-            <table style="padding: 0 10px;">
+            <table>
                 <thead><tr>
-                    <th style="width: 5%;">STT</th><th style="width: 11%;">Ngày</th><th style="width: 34%;">Nội dung</th>
-                    <th style="width: 12%;">ĐVVC</th><th style="width: 13%;">Phân loại</th><th style="width: 13%;">Người TT</th><th style="width: 12%;">Phí (VNĐ)</th>
+                    <th>STT</th><th>Ngày</th><th>Nội dung</th><th>ĐVVC</th><th>Phân loại</th><th>Người TT</th><th>Phí (VNĐ)</th>
                 </tr></thead>
                 <tbody>{rows_html}</tbody>
             </table>
-            <div style="padding: 0 10px;"><div class="total-box">💰 TỔNG CỘNG CHI PHÍ: {total_amount:,.0f} VNĐ</div></div>
+            <div class="total-box">💰 TỔNG CỘNG CHI PHÍ: {total_amount:,.0f} VNĐ</div>
         </body></html>
         """
+        
+        result = BytesIO()
+        pisa.CreatePDF(BytesIO(html_content.encode("utf-8")), dest=result)
+        return result.getvalue()
 
-    dulieu_html = tao_giao_dien_html_full_width(df_f, thang, tong_tien, tien_cty_ck, tien_quynh_nhu)
+    # Tạo dữ liệu PDF dạng Byte
+    pdf_data = tao_file_pdf_that(df_f, thang, tong_tien, tien_cty_ck, tien_quynh_nhu)
+    
     st.download_button(
-        label="📥 Xuất file PDF",
-        data=dulieu_html,
-        file_name=f"Bao_cao_phi_ship_thang_{thang.replace('/', '_')}.html",
-        mime="text/html"
+        label="📥 Xuất file PDF thật",
+        data=pdf_data,
+        file_name=f"Bao_cao_phi_ship_thang_{thang.replace('/', '_')}.pdf",
+        mime="application/pdf"
     )
 
 # ========================================================
