@@ -419,14 +419,14 @@ with btn_c2:
             <div class="kpi-wrapper">
                 <div class="kpi-container">
                     <div class="kpi-card">
-                        <div class="kpi-header">🏢 SỐ TIỀN CÔNG TY CẦN CHUYỂN KHOẢN</div>
+                        <div class="kpi-header">🏢 CÔNG TY THANH TOÁN (Theo hóa đơn VTP)</div>
                         <div class="kpi-body">
                             <div class="kpi-value" style="color: #2e7d32;">{cty:,}</div>
                             <div class="kpi-currency">VNĐ</div>
                         </div>
                     </div>
                     <div class="kpi-card">
-                        <div class="kpi-header">👩‍💼 SỐ TIỀN CẦN TRẢ LẠI CHO QUỲNH NHƯ</div>
+                        <div class="kpi-header">👩‍💼 QUỲNH NHƯ ĐÃ CHI</div>
                         <div class="kpi-body">
                             <div class="kpi-value" style="color: #e65100;">{qnhu:,}</div>
                             <div class="kpi-currency">VNĐ</div>
