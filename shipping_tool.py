@@ -298,19 +298,19 @@ st.html(
     <div class="kpi-container">
         <!-- Card 1 -->
         <div class="kpi-card">
-            <div class="kpi-header">🏢 SỐ TIỀN CÔNG TY CẦN CHUYỂN KHOẢN</div>
+            <div class="kpi-header">🏢 CÔNG TY THANH TOÁN</div>
             <div class="kpi-body">
                 <div class="kpi-value" style="color: #2e7d32;">{tien_cty_ck:,}</div>
-                <div class="kpi-unit">VNĐ (Hãng vận chuyển trừ trực tiếp tài khoản công ty)</div>
+                <div class="kpi-unit">VNĐ (Hóa đơn Viettel Post)</div>
             </div>
         </div>
         
         <!-- Card 2 -->
         <div class="kpi-card">
-            <div class="kpi-header">👩‍💼 SỐ TIỀN CẦN TRẢ LẠI CHO QUỲNH NHƯ</div>
+            <div class="kpi-header">👩‍💼 QUỲNH NHƯ THANH TOÁN</div>
             <div class="kpi-body">
                 <div class="kpi-value" style="color: #e65100;">{tien_quynh_nhu:,}</div>
-                <div class="kpi-unit">VNĐ (Quỳnh Như đã ứng tiền mặt chi hộ)</div>
+                <div class="kpi-unit">VNĐ (Quỳnh Như đã chi hộ)</div>
             </div>
         </div>
     </div>
