@@ -370,12 +370,12 @@ st.html(
     """
 )
 
-# Nút In & Xuất file
+# Nút chức năng In ấn / Xuất PDF
 st.write(" ")
-btn_c1, btn_c2, btn_c3 = st.columns([1.5, 2, 8])
+btn_c1, btn_c2 = st.columns([4, 8])
 
 with btn_c1:
-    if st.button("🖨️ In đây nè bé ưi"):
+    if st.button("🖨️ XUẤT FILE PDF / IN BÁO CÁO", use_container_width=True):
         components.html("<script>window.parent.print();</script>", height=0)
 
 with btn_c2:
