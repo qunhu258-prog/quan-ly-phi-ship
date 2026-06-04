@@ -82,7 +82,7 @@ st.markdown("""
         border: 2px solid #5B7E3C;
         border-radius: 8px;
         overflow: hidden;
-        box-shadow: 0 3px 8 rgba(0,0,0,0.06);
+        box-shadow: 0 3px 8px rgba(0,0,0,0.06);
         text-align: center;
     }
     .kpi-header {
@@ -110,20 +110,25 @@ st.markdown("""
     }
 
     /* ==========================================
-       XỬ LÝ TRIỆT ĐỂ LỖI KHOẢNG TRỐNG KHI IN 🖨️
+       XỬ LÝ TRIỆT ĐỂ LỖI LÙI TRANG KHI IN 🖨️
        ========================================== */
     @media print {
-        @page { size: landscape; margin: 10mm 15mm !important; }
+        @page { size: landscape; margin: 8mm 12mm !important; }
         
-        /* Ẩn hoàn toàn tất cả các thành phần thừa bao gồm cả vùng chứa trống */
+        /* Triệt tiêu hoàn toàn thanh Header mặc định của Streamlit (Chứa nút Deploy, Chữ...) */
+        header, [data-testid="stHeader"], .stAppHeader {
+            display: none !important;
+            height: 0 !important;
+            opacity: 0 !important;
+        }
+
+        /* Ẩn hoàn toàn tất cả các thành phần giao diện không cần in */
         section[data-testid="stSidebar"], 
         div[data-testid="stForm"], 
         div.stSelectbox,
-        header, 
         footer, 
         h1, 
         iframe, 
-        [data-testid="stHeader"], 
         div.stButton,
         div[data-testid="stElementContainer"]:has(button),
         div:has(> .stForm) { 
@@ -133,22 +138,23 @@ st.markdown("""
             padding: 0 !important; 
         }
         
-        /* Triệt tiêu khoảng trống phía trên do khung chứa Streamlit tạo ra */
-        .main, .main .block-container, [data-testid="stMainBlockContainer"] {
+        /* Ép khung chứa chính lên sát mép trên cùng của giấy, xóa toàn bộ padding khoảng trống */
+        .stApp, .main, .main .block-container, [data-testid="stMainBlockContainer"] {
             padding-top: 0px !important; 
+            margin-top: 0px !important;
             padding-left: 0px !important; 
             padding-right: 0px !important;
             margin: 0px !important; 
             top: 0px !important;
         }
 
-        /* Tiêu đề in chuyên dụng đẩy lên đầu trang */
+        /* Tiêu đề in chuyên dụng được căn lề trên cùng hợp lý */
         .print-title {
             display: block !important; 
             color: #5B7E3C !important; 
             text-align: center !important;
-            margin-top: 0px !important; 
-            margin-bottom: 25px !important; 
+            margin-top: 5px !important; 
+            margin-bottom: 20px !important; 
             font-size: 24px !important; 
             font-weight: bold !important;
         }
@@ -324,7 +330,6 @@ st.markdown("### 📊 Số liệu thanh toán cho Kế toán")
 st.html(
     f"""
     <div class="kpi-container">
-        <!-- Card 1 -->
         <div class="kpi-card">
             <div class="kpi-header">🏢 SỐ TIỀN CÔNG TY CẦN CHUYỂN KHOẢN</div>
             <div class="kpi-body">
@@ -333,7 +338,6 @@ st.html(
             </div>
         </div>
         
-        <!-- Card 2 -->
         <div class="kpi-card">
             <div class="kpi-header">👩‍💼 SỐ TIỀN CẦN TRẢ LẠI CHO QUỲNH NHƯ</div>
             <div class="kpi-body">
