@@ -229,7 +229,7 @@ else:
 
 mac_dinh_dv = ["Ahamove", "Grab", "Lalamove", "GHTK", "GHN", "Viettel Post"]
 mac_dinh_pl = ["Đơn hàng bán", "Quà Hội viên", "Tài liệu"]
-mac_dinh_ntt = ["Quỳnh Như", "Công ty CK sau"]
+mac_dinh_ntt = ["Quỳnh Như", "Công ty CK"]
 
 if "ds_donvi" not in st.session_state:
     st.session_state.ds_donvi = list(sorted(set(mac_dinh_dv + [x for x in list_dv_sheet if x])))
@@ -326,7 +326,7 @@ df_f = df[df["Ngày_DT"].dt.strftime("%m/%Y") == thang]
 df_f = df_f.sort_values(by="Ngày_DT", ascending=True)
 
 # --- SỐ TIỀN THEO ĐỐI TƯỢNG CHO CARD KPI ---
-tien_cty_ck = int(df_f[df_f["Người thanh toán"] == "Công ty CK sau"]["Phí (VNĐ)"].sum())
+tien_cty_ck = int(df_f[df_f["Người thanh toán"] == "Công ty CK"]["Phí (VNĐ)"].sum())
 tien_quynh_nhu = int(df_f[df_f["Người thanh toán"] == "Quỳnh Như"]["Phí (VNĐ)"].sum())
 tong_tien = int(df_f["Phí (VNĐ)"].sum())
 
@@ -386,7 +386,7 @@ with btn_c2:
                 <td style='text-align: center; width: 12%;'>{r['Đơn vị']}</td>
                 <td style='text-align: center; width: 13%;'>{r['Phân loại']}</td>
                 <td style='text-align: center; width: 13%;'>{r['Người thanh toán']}</td>
-                <td style='text-align: right; padding-right: 12px; font-weight: bold; width: 12%; white-space: nowrap;'>{r['Phí (VNĐ)']:,}</td>
+                <td style='text-align: center; font-weight: bold; width: 12%; white-space: nowrap;'>{r['Phí (VNĐ)']:,}</td>
             </tr>
             """
         
@@ -408,7 +408,7 @@ with btn_c2:
             .kpi-currency {{ font-size: 12pt; font-weight: bold; color: #666666; }}
 
             table {{ width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 20px; }}
-            th {{ background-color: #5B7E3C; color: white; font-weight: bold; font-size: 11pt; padding: 10px 4px; border: 1px solid #5B7E3C; }}
+            th {{ background-color: #5B7E3C; color: white; font-weight: bold; font-size: 11pt; padding: 10px 4px; border: 1px solid #5B7E3C; text-align: center; }}
             td {{ padding: 10px 4px; font-size: 10pt; border-bottom: 1px solid #eef2ec; vertical-align: middle; }}
             tr:nth-child(even) td {{ background-color: #fcfdfe; }}
             .total-box {{ padding: 15px; border-radius: 10px; font-size: 14pt; font-weight: bold; text-align: center; background-color: #5B7E3C; color: white; margin-top: 15px; }}
@@ -438,7 +438,7 @@ with btn_c2:
             <table style="padding: 0 10px;">
                 <thead><tr>
                     <th style="width: 5%;">STT</th><th style="width: 11%;">Ngày</th><th style="width: 34%;">Nội dung</th>
-                    <th style="width: 12%;">ĐVVC</th><th style="width: 13%;">Phân loại</th><th style="width: 13%;">Người TT</th><th style="width: 12%;">Phí (VNĐ)</th>
+                    <th style="width: 12%;">ĐVVC</th><th style="width: 13%;">Phân loại</th><th style="width: 13%;">Người TT</th><th style="width: 12%; text-align: center;">Phí (VNĐ)</th>
                 </tr></thead>
                 <tbody>{rows_html}</tbody>
             </table>
