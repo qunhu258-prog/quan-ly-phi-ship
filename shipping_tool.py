@@ -115,7 +115,7 @@ st.markdown("""
     @media print {
         @page { size: landscape; margin: 8mm 12mm !important; }
         
-        /* Triệt tiêu hoàn toàn thanh Header mặc định của Streamlit (Chứa nút Deploy, Chữ...) */
+        /* Triệt tiêu hoàn toàn thanh Header mặc định của Streamlit */
         header, [data-testid="stHeader"], .stAppHeader {
             display: none !important;
             height: 0 !important;
@@ -131,7 +131,8 @@ st.markdown("""
         iframe, 
         div.stButton,
         div[data-testid="stElementContainer"]:has(button),
-        div:has(> .stForm) { 
+        div:has(> .stForm),
+        .no-print { 
             display: none !important; 
             height: 0 !important; 
             margin: 0 !important; 
@@ -148,14 +149,14 @@ st.markdown("""
             top: 0px !important;
         }
 
-        /* Tiêu đề in chuyên dụng được căn lề trên cùng hợp lý */
+        /* Tiêu đề in chuyên dụng được đưa lên trên cùng bản in */
         .print-title {
             display: block !important; 
             color: #5B7E3C !important; 
             text-align: center !important;
-            margin-top: 5px !important; 
-            margin-bottom: 20px !important; 
-            font-size: 24px !important; 
+            margin-top: 0px !important; 
+            margin-bottom: 25px !important; 
+            font-size: 26px !important; 
             font-weight: bold !important;
         }
 
@@ -323,10 +324,17 @@ if not df_phat_sinh.empty:
         if name.strip():
             thong_tin_them += f" • Khác ({name}): {int(money):,} VNĐ"
 
+
+# ========================================================
+# 6.1. TIÊU ĐỀ IN TRÊN CÙNG (Chỉ hiển thị khi bấm In)
+# ========================================================
+st.markdown(f'<div class="print-title">CHI PHÍ GIAO HÀNG - THÁNG {thang}</div>', unsafe_allow_html=True)
+
+
 # ==========================================
 # 6.2. HIỂN THỊ CÁC CARD TỔNG TIỀN CHO KẾ TOÁN
 # ==========================================
-st.markdown("### 📊 Số liệu thanh toán cho Kế toán")
+st.markdown('<h3 class="no-print">📊 Số liệu thanh toán cho Kế toán</h3>', unsafe_allow_html=True)
 st.html(
     f"""
     <div class="kpi-container">
@@ -411,8 +419,6 @@ with btn_c2:
 # ========================================================
 # 7. HIỂN THỊ BẢNG DỮ LIỆU ĐA CỘT MỚI
 # ========================================================
-st.markdown(f'<div class="print-title">CHI PHÍ GIAO HÀNG - THÁNG {thang}</div>', unsafe_allow_html=True)
-
 h1, h2, h3, h4, h5, h6, h7, h8 = st.columns([0.8, 1.8, 4.5, 1.8, 2.0, 2.0, 2.0, 1.2])
 h1.markdown('<div class="header-col header-left">STT</div>', unsafe_allow_html=True)
 h2.markdown('<div class="header-col">Ngày</div>', unsafe_allow_html=True)
