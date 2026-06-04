@@ -350,7 +350,7 @@ st.html(
         <div class="kpi-container">
             <!-- Card 1 -->
             <div class="kpi-card">
-                <div class="kpi-header">🏢 CÔNG TY CHUYỂN KHOẢN (Hóa đơn VTP)</div>
+                <div class="kpi-header">🏢 CÔNG TY CHUYỂN KHOẢN (Hóa đơn Viettel Post)</div>
                 <div class="kpi-body">
                     <div class="kpi-value" style="color: #2e7d32;">{tien_cty_ck:,}</div>
                     <div class="kpi-currency">VNĐ</div>
