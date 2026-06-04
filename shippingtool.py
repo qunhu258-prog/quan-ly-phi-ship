@@ -193,7 +193,8 @@ st.markdown("""
 # ==========================================
 # 4. KẾT NỐI GOOGLE SHEETS
 # ==========================================
-SHEET_ID = "1pX1uImwD770upHdJ4OKNzYxwKxd5C_VeI2zQeW0SBLUg"
+# ĐÃ SỬA CHÍNH XÁC ID SHEET (BỎ CHỮ G THỪA Ở CUỐI)
+SHEET_ID = "1pX1uImwD770upHdJ4OKNzYxwKxd5C_VeI2zQeW0SBLU"
 
 @st.cache_resource
 def ket_noi_sheet():
@@ -229,7 +230,7 @@ else:
 
 mac_dinh_dv = ["Ahamove", "Grab", "Lalamove", "GHTK", "GHN", "Viettel Post"]
 mac_dinh_pl = ["Đơn hàng bán", "Quà Hội viên", "Tài liệu"]
-mac_dinh_ntt = ["Quỳnh Như", "Công ty CK sau"]
+mac_dinh_ntt = ["Quỳnh Như", "Công ty CK"]
 
 if "ds_donvi" not in st.session_state:
     st.session_state.ds_donvi = list(sorted(set(mac_dinh_dv + [x for x in list_dv_sheet if x])))
@@ -326,7 +327,7 @@ df_f = df[df["Ngày_DT"].dt.strftime("%m/%Y") == thang]
 df_f = df_f.sort_values(by="Ngày_DT", ascending=True)
 
 # --- SỐ TIỀN THEO ĐỐI TƯỢNG CHO CARD KPI ---
-tien_cty_ck = int(df_f[df_f["Người thanh toán"] == "Công ty CK sau"]["Phí (VNĐ)"].sum())
+tien_cty_ck = int(df_f[df_f["Người thanh toán"] == "Công ty CK"]["Phí (VNĐ)"].sum())
 tien_quynh_nhu = int(df_f[df_f["Người thanh toán"] == "Quỳnh Như"]["Phí (VNĐ)"].sum())
 tong_tien = int(df_f["Phí (VNĐ)"].sum())
 
@@ -344,18 +345,16 @@ st.html(
     f"""
     <div class="kpi-wrapper">
         <div class="kpi-container">
-            <!-- Card 1 -->
             <div class="kpi-card">
-                <div class="kpi-header">🏢 CÔNG TY THANH TOÁN (Theo hóa đơn VTP)</div>
+                <div class="kpi-header">🏢 SỐ TIỀN CÔNG TY CẦN CHUYỂN KHOẢN</div>
                 <div class="kpi-body">
                     <div class="kpi-value" style="color: #2e7d32;">{tien_cty_ck:,}</div>
                     <div class="kpi-currency">VNĐ</div>
                 </div>
             </div>
             
-            <!-- Card 2 -->
             <div class="kpi-card">
-                <div class="kpi-header">👩‍💼 QUỲNH NHƯ ĐÃ CHI</div>
+                <div class="kpi-header">👩‍💼 SỐ TIỀN CẦN TRẢ LẠI CHO QUỲNH NHƯ</div>
                 <div class="kpi-body">
                     <div class="kpi-value" style="color: #e65100;">{tien_quynh_nhu:,}</div>
                     <div class="kpi-currency">VNĐ</div>
@@ -415,18 +414,17 @@ with btn_c2:
         </style></head><body>
             <div class="title-container"><h1 class="print-title">CHI PHÍ GIAO HÀNG - THÁNG {month_txt}</h1></div>
             
-            <!-- Hiển thị 2 Card KPI chính giữa gọn gàng giống hệt trên Web -->
             <div class="kpi-wrapper">
                 <div class="kpi-container">
                     <div class="kpi-card">
-                        <div class="kpi-header">🏢 CÔNG TY THANH TOÁN (Theo hóa đơn VTP)</div>
+                        <div class="kpi-header">🏢 SỐ TIỀN CÔNG TY CẦN CHUYỂN KHOẢN</div>
                         <div class="kpi-body">
                             <div class="kpi-value" style="color: #2e7d32;">{cty:,}</div>
                             <div class="kpi-currency">VNĐ</div>
                         </div>
                     </div>
                     <div class="kpi-card">
-                        <div class="kpi-header">👩‍💼 QUỲNH NHƯ ĐÃ CHI</div>
+                        <div class="kpi-header">👩‍💼 SỐ TIỀN CẦN TRẢ LẠI CHO QUỲNH NHƯ</div>
                         <div class="kpi-body">
                             <div class="kpi-value" style="color: #e65100;">{qnhu:,}</div>
                             <div class="kpi-currency">VNĐ</div>
