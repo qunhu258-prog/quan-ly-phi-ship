@@ -229,7 +229,7 @@ else:
 
 mac_dinh_dv = ["Ahamove", "Grab", "Lalamove", "GHTK", "GHN", "Viettel Post"]
 mac_dinh_pl = ["Đơn hàng bán", "Quà Hội viên", "Tài liệu"]
-mac_dinh_ntt = ["Quỳnh Như", "Công ty CK"]
+mac_dinh_ntt = ["Quỳnh Như", "Công ty CK sau"]
 
 if "ds_donvi" not in st.session_state:
     st.session_state.ds_donvi = list(sorted(set(mac_dinh_dv + [x for x in list_dv_sheet if x])))
@@ -326,7 +326,7 @@ df_f = df[df["Ngày_DT"].dt.strftime("%m/%Y") == thang]
 df_f = df_f.sort_values(by="Ngày_DT", ascending=True)
 
 # --- SỐ TIỀN THEO ĐỐI TƯỢNG CHO CARD KPI ---
-tien_cty_ck = int(df_f[df_f["Người thanh toán"] == "Công ty CK"]["Phí (VNĐ)"].sum())
+tien_cty_ck = int(df_f[df_f["Người thanh toán"] == "Công ty CK sau"]["Phí (VNĐ)"].sum())
 tien_quynh_nhu = int(df_f[df_f["Người thanh toán"] == "Quỳnh Như"]["Phí (VNĐ)"].sum())
 tong_tien = int(df_f["Phí (VNĐ)"].sum())
 
