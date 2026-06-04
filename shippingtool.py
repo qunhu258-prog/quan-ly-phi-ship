@@ -120,11 +120,14 @@ st.markdown("""
     }
 
     /* ==========================================
-       XỬ LÝ TRIỆT ĐỂ LỖI LÙI TRANG KHI IN 🖨️
+        XỬ LÝ TRIỆT ĐỂ LỖI LÙI TRANG KHI IN 🖨️
        ========================================== */
     @media print {
         @page { size: landscape; margin: 8mm 12mm !important; }
         
+        /* Ẩn hoàn toàn tiêu đề nhập liệu lớn khi in */
+        h1, [data-testid="stHeader"]+div h1 { display: none !important; }
+
         /* Triệt tiêu hoàn toàn thanh Header mặc định của Streamlit */
         header, [data-testid="stHeader"], .stAppHeader {
             display: none !important;
@@ -137,7 +140,6 @@ st.markdown("""
         div[data-testid="stForm"], 
         div.stSelectbox,
         footer, 
-        h1, 
         iframe, 
         div.stButton,
         div[data-testid="stElementContainer"]:has(button),
@@ -170,18 +172,20 @@ st.markdown("""
             font-weight: bold !important;
         }
 
-        /* Định dạng lại bảng và dòng dữ liệu cân đối */
+        /* Định dạng lại bảng và nới rộng cột tiền tránh rớt dòng */
         div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; width: 100% !important; gap: 0px !important; }
         div[data-testid="stHorizontalBlock"] > div:nth-child(8) { display: none !important; }
         div[data-testid="stHorizontalBlock"] > div:nth-child(1) { width: 5% !important; max-width: 5% !important; flex: 0 0 5% !important; }
         div[data-testid="stHorizontalBlock"] > div:nth-child(2) { width: 11% !important; max-width: 11% !important; flex: 0 0 11% !important; }
-        div[data-testid="stHorizontalBlock"] > div:nth-child(3) { width: 34% !important; max-width: 34% !important; flex: 0 0 34% !important; }
-        div[data-testid="stHorizontalBlock"] > div:nth-child(4) { width: 12% !important; max-width: 12% !important; flex: 0 0 12% !important; }
+        div[data-testid="stHorizontalBlock"] > div:nth-child(3) { width: 33% !important; max-width: 33% !important; flex: 0 0 33% !important; }
+        div[data-testid="stHorizontalBlock"] > div:nth-child(4) { width: 11% !important; max-width: 11% !important; flex: 0 0 11% !important; }
         div[data-testid="stHorizontalBlock"] > div:nth-child(5) { width: 13% !important; max-width: 13% !important; flex: 0 0 13% !important; }
         div[data-testid="stHorizontalBlock"] > div:nth-child(6) { width: 13% !important; max-width: 13% !important; flex: 0 0 13% !important; }
-        div[data-testid="stHorizontalBlock"] > div:nth-child(7) { width: 12% !important; max-width: 12% !important; flex: 0 0 12% !important; border-right: none !important; }
+        /* Cột Phí (Cột 7) tăng diện tích lên 14% và ép không xuống dòng */
+        div[data-testid="stHorizontalBlock"] > div:nth-child(7) { width: 14% !important; max-width: 14% !important; flex: 0 0 14% !important; border-right: none !important; }
         div[data-testid="stHorizontalBlock"]:has(.header-col) > div:nth-child(7) .header-col { border-radius: 0 8px 0 0 !important; }
         .row-style, .header-col { font-size: 13px !important; padding: 6px 2px !important; }
+        div[data-testid="stHorizontalBlock"] > div:nth-child(7) .row-style { white-space: nowrap !important; justify-content: center !important; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -348,7 +352,6 @@ st.html(
     f"""
     <div class="kpi-wrapper">
         <div class="kpi-container">
-            <!-- Card 1 -->
             <div class="kpi-card">
                 <div class="kpi-header">🏢 SỐ TIỀN CÔNG TY CẦN CHUYỂN KHOẢN</div>
                 <div class="kpi-body">
@@ -357,7 +360,6 @@ st.html(
                 </div>
             </div>
             
-            <!-- Card 2 -->
             <div class="kpi-card">
                 <div class="kpi-header">👩‍💼 SỐ TIỀN CẦN TRẢ LẠI CHO QUỲNH NHƯ</div>
                 <div class="kpi-body">
@@ -390,26 +392,54 @@ with btn_c2:
                 <td style='text-align: center; width: 12%;'>{r['Đơn vị']}</td>
                 <td style='text-align: center; width: 13%;'>{r['Phân loại']}</td>
                 <td style='text-align: center; width: 13%;'>{r['Người thanh toán']}</td>
-                <td style='text-align: right; padding-right: 12px; font-weight: bold; width: 12%;'>{r['Phí (VNĐ)']:,}</td>
+                <td style='text-align: right; padding-right: 12px; font-weight: bold; width: 12%; white-space: nowrap;'>{r['Phí (VNĐ)']:,}</td>
             </tr>
             """
         
         return f"""
         <!DOCTYPE html><html><head><meta charset="utf-8">
         <style>
-            @page {{ size: landscape; margin: 0; }}
-            body {{ font-family: Arial, sans-serif; color: #333; margin: 0; padding: 0; width: 100%; }}
-            .title-container {{ text-align: center; padding-top: 30px; margin-bottom: 25px; }}
-            .print-title {{ color: #5B7E3C; font-size: 22pt; font-weight: bold; text-transform: uppercase; }}
+            @page {{ size: landscape; margin: 10mm; }}
+            body {{ font-family: Arial, sans-serif; color: #333; margin: 0; padding: 0; width: 100%; background-color: #fff; }}
+            .title-container {{ text-align: center; padding-top: 10px; margin-bottom: 20px; }}
+            .print-title {{ color: #5B7E3C; font-size: 22pt; font-weight: bold; text-transform: uppercase; margin: 0; }}
+            
+            /* CSS ĐƯA 2 CARD KPI VÀO GIỮA FILE HTML TẢI VỀ */
+            .kpi-wrapper {{ max-width: 850px; margin: 0 auto 25px auto; padding: 0 10px; }}
+            .kpi-container {{ display: flex; gap: 20px; }}
+            .kpi-card {{ flex: 1; background-color: #ffffff; border: 2px solid #5B7E3C; border-radius: 8px; overflow: hidden; text-align: center; }}
+            .kpi-header {{ background-color: #5B7E3C; color: #ffffff; font-size: 11pt; font-weight: bold; padding: 10px 5px; text-transform: uppercase; }}
+            .kpi-body {{ padding: 18px 10px; display: flex; align-items: baseline; justify-content: center; gap: 6px; }}
+            .kpi-value {{ font-size: 24pt; color: #222222; font-weight: bold; line-height: 1; }}
+            .kpi-currency {{ font-size: 12pt; font-weight: bold; color: #666666; }}
+
             table {{ width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 20px; }}
             th {{ background-color: #5B7E3C; color: white; font-weight: bold; font-size: 11pt; padding: 10px 4px; border: 1px solid #5B7E3C; }}
             td {{ padding: 10px 4px; font-size: 10pt; border-bottom: 1px solid #eef2ec; vertical-align: middle; }}
             tr:nth-child(even) td {{ background-color: #fcfdfe; }}
-            .summary-text {{ font-size: 12pt; margin: 10px 15px; color: #444; font-weight: bold; text-align: left; }}
             .total-box {{ padding: 15px; border-radius: 10px; font-size: 14pt; font-weight: bold; text-align: center; background-color: #5B7E3C; color: white; margin-top: 15px; }}
         </style></head><body>
             <div class="title-container"><h1 class="print-title">CHI PHÍ GIAO HÀNG - THÁNG {month_txt}</h1></div>
-            <div class="summary-text">📍 Thống kê nguồn chi: Công ty CK: {cty:,} đ | Quỳnh Như hoàn trả: {qnhu:,} đ</div>
+            
+            <div class="kpi-wrapper">
+                <div class="kpi-container">
+                    <div class="kpi-card">
+                        <div class="kpi-header">🏢 SỐ TIỀN CÔNG TY CẦN CHUYỂN KHOẢN</div>
+                        <div class="kpi-body">
+                            <div class="kpi-value" style="color: #2e7d32;">{cty:,}</div>
+                            <div class="kpi-currency">VNĐ</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-header">👩‍💼 SỐ TIỀN CẦN TRẢ LẠI CHO QUỲNH NHƯ</div>
+                        <div class="kpi-body">
+                            <div class="kpi-value" style="color: #e65100;">{qnhu:,}</div>
+                            <div class="kpi-currency">VNĐ</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <table style="padding: 0 10px;">
                 <thead><tr>
                     <th style="width: 5%;">STT</th><th style="width: 11%;">Ngày</th><th style="width: 34%;">Nội dung</th>
@@ -423,7 +453,7 @@ with btn_c2:
 
     dulieu_html = tao_giao_dien_html_full_width(df_f, thang, tong_tien, tien_cty_ck, tien_quynh_nhu)
     st.download_button(
-        label="📥 Xuất file PDF",
+        label="📥 Xuất file HTML/PDF",
         data=dulieu_html,
         file_name=f"Bao_cao_phi_ship_thang_{thang.replace('/', '_')}.html",
         mime="text/html"
