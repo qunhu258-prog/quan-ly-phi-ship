@@ -1,4 +1,4 @@
-﻿import streamlit as st
+import streamlit as st
 import gspread
 import pandas as pd
 import re
@@ -189,8 +189,6 @@ st.markdown("""
 # ==========================================
 # 4. KẾT NỐI GOOGLE SHEETS
 # ==========================================
-SHEET_ID = "1pX1uImwD770upHdJ4OKNzYxwKxd5C_VeI2zQeW0SBLUg"
-
 @st.cache_resource
 def ket_noi_sheet():
     s = st.secrets
@@ -204,7 +202,10 @@ def ket_noi_sheet():
     scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
     creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
     gc = gspread.authorize(creds)
-    return gc.open_by_key(SHEET_ID).sheet1
+    
+    # Sử dụng chuỗi String thuần túy, sạch sẽ để tránh lỗi mã hóa ký tự Notepad
+    id_goc = "1pX1uImwD770upHdJ4OKNzYxwKxd5C_VeI2zQeW0SBLU"
+    return gc.open_by_key(id_goc).sheet1
 
 ws = ket_noi_sheet()
 
@@ -348,7 +349,6 @@ st.html(
     f"""
     <div class="kpi-wrapper">
         <div class="kpi-container">
-            <!-- Card 1 -->
             <div class="kpi-card">
                 <div class="kpi-header">🏢 SỐ TIỀN CÔNG TY CẦN CHUYỂN KHOẢN</div>
                 <div class="kpi-body">
@@ -357,7 +357,6 @@ st.html(
                 </div>
             </div>
             
-            <!-- Card 2 -->
             <div class="kpi-card">
                 <div class="kpi-header">👩‍💼 SỐ TIỀN CẦN TRẢ LẠI CHO QUỲNH NHƯ</div>
                 <div class="kpi-body">
@@ -394,22 +393,51 @@ with btn_c2:
             </tr>
             """
         
+        # Đồng bộ mẫu xuất PDF y chang giao diện form in
         return f"""
         <!DOCTYPE html><html><head><meta charset="utf-8">
         <style>
-            @page {{ size: landscape; margin: 0; }}
+            @page {{ size: landscape; margin: 8mm 12mm; }}
             body {{ font-family: Arial, sans-serif; color: #333; margin: 0; padding: 0; width: 100%; }}
-            .title-container {{ text-align: center; padding-top: 30px; margin-bottom: 25px; }}
-            .print-title {{ color: #5B7E3C; font-size: 22pt; font-weight: bold; text-transform: uppercase; }}
+            .title-container {{ text-align: center; margin-top: 0px; margin-bottom: 25px; }}
+            .print-title {{ color: #5B7E3C; font-size: 26px; font-weight: bold; text-transform: uppercase; }}
+            
+            /* CSS Card KPI cho file HTML đồng bộ co nhỏ vào giữa */
+            .kpi-wrapper {{ max-width: 900px; margin: 0 auto 25px auto; padding: 0 10px; }}
+            .kpi-container {{ display: flex; gap: 20px; }}
+            .kpi-card {{ flex: 1; background-color: #ffffff; border: 2px solid #5B7E3C; border-radius: 8px; overflow: hidden; text-align: center; }}
+            .kpi-header {{ background-color: #5B7E3C; color: #ffffff; font-size: 14px; font-weight: 700; padding: 12px 5px; text-transform: uppercase; letter-spacing: 0.5px; }}
+            .kpi-body {{ padding: 22px 10px; display: flex; align-items: baseline; justify-content: center; gap: 6px; }}
+            .kpi-value {{ font-size: 32px; color: #222222; font-weight: 700; line-height: 1; }}
+            .kpi-currency {{ font-size: 16px; font-weight: bold; color: #666666; }}
+            
             table {{ width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 20px; }}
-            th {{ background-color: #5B7E3C; color: white; font-weight: bold; font-size: 11pt; padding: 10px 4px; border: 1px solid #5B7E3C; }}
-            td {{ padding: 10px 4px; font-size: 10pt; border-bottom: 1px solid #eef2ec; vertical-align: middle; }}
+            th {{ background-color: #5B7E3C; color: white; font-weight: bold; font-size: 13px; padding: 8px 4px; border: 1px solid #5B7E3C; }}
+            td {{ padding: 8px 4px; font-size: 13px; border-bottom: 1px solid #eef2ec; border-left: 1px solid #eef2ec; border-right: 1px solid #eef2ec; vertical-align: middle; }}
             tr:nth-child(even) td {{ background-color: #fcfdfe; }}
-            .summary-text {{ font-size: 12pt; margin: 10px 15px; color: #444; font-weight: bold; text-align: left; }}
-            .total-box {{ padding: 15px; border-radius: 10px; font-size: 14pt; font-weight: bold; text-align: center; background-color: #5B7E3C; color: white; margin-top: 15px; }}
+            .total-box {{ padding: 18px; border-radius: 15px; font-size: 22px; font-weight: bold; text-align: center; background-color: #5B7E3C; color: white; margin-top: 20px; }}
         </style></head><body>
-            <div class="title-container"><h1 class="print-title">CHI PHÍ GIAO HÀNG - THÁNG {month_txt}</h1></div>
-            <div class="summary-text">📍 Thống kê nguồn chi: Công ty CK: {cty:,} đ | Quỳnh Như hoàn trả: {qnhu:,} đ</div>
+            <div class="title-container"><div class="print-title">CHI PHÍ GIAO HÀNG - THÁNG {month_txt}</div></div>
+            
+            <div class="kpi-wrapper">
+                <div class="kpi-container">
+                    <div class="kpi-card">
+                        <div class="kpi-header">🏢 SỐ TIỀN CÔNG TY CẦN CHUYỂN KHOẢN</div>
+                        <div class="kpi-body">
+                            <div class="kpi-value" style="color: #2e7d32;">{cty:,}</div>
+                            <div class="kpi-currency">VNĐ</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-header">👩‍💼 SỐ TIỀN CẦN TRẢ LẠI CHO QUỲNH NHƯ</div>
+                        <div class="kpi-body">
+                            <div class="kpi-value" style="color: #e65100;">{qnhu:,}</div>
+                            <div class="kpi-currency">VNĐ</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <table style="padding: 0 10px;">
                 <thead><tr>
                     <th style="width: 5%;">STT</th><th style="width: 11%;">Ngày</th><th style="width: 34%;">Nội dung</th>
@@ -417,7 +445,7 @@ with btn_c2:
                 </tr></thead>
                 <tbody>{rows_html}</tbody>
             </table>
-            <div style="padding: 0 10px;"><div class="total-box">💰 TỔNG CỘNG CHI PHÍ: {total_amount:,.0f} VNĐ</div></div>
+            <div style="padding: 0 10px;"><div class="total-box">💰 TỔNG CHI PHÍ THÁNG {month_txt}: {total_amount:,.0f} VNĐ</div></div>
         </body></html>
         """
 
