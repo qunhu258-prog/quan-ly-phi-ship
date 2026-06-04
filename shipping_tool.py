@@ -189,7 +189,7 @@ st.markdown("""
 # ==========================================
 # 4. KẾT NỐI GOOGLE SHEETS
 # ==========================================
-SHEET_ID = "1pX1uImwD770upHdJ4OKNzYxwKxd5C_VeI2zQeW0SBLUg"
+SHEET_ID = "1pX1uImwD770upHdJ4OKNzYxwKxd5C_VeI2zQeW0SBLU"
 
 @st.cache_resource
 def ket_noi_sheet():
@@ -392,7 +392,7 @@ with btn_c2:
             </tr>
             """
         
-        # Đồng bộ giao diện xuất file y hệt giao diện khi bấm nút In (Có tiêu đề trên cùng, 2 card nằm gọn ở giữa)
+        # Đồng bộ mẫu xuất PDF y chang giao diện form in
         return f"""
         <!DOCTYPE html><html><head><meta charset="utf-8">
         <style>
