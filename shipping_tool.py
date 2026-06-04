@@ -392,6 +392,7 @@ with btn_c2:
             </tr>
             """
         
+        # Đồng bộ giao diện xuất file y hệt giao diện khi bấm nút In (Có tiêu đề trên cùng, 2 card nằm gọn ở giữa)
         return f"""
         <!DOCTYPE html><html><head><meta charset="utf-8">
         <style>
@@ -400,6 +401,7 @@ with btn_c2:
             .title-container {{ text-align: center; margin-top: 0px; margin-bottom: 25px; }}
             .print-title {{ color: #5B7E3C; font-size: 26px; font-weight: bold; text-transform: uppercase; }}
             
+            /* CSS Card KPI cho file HTML đồng bộ co nhỏ vào giữa */
             .kpi-wrapper {{ max-width: 900px; margin: 0 auto 25px auto; padding: 0 10px; }}
             .kpi-container {{ display: flex; gap: 20px; }}
             .kpi-card {{ flex: 1; background-color: #ffffff; border: 2px solid #5B7E3C; border-radius: 8px; overflow: hidden; text-align: center; }}
@@ -446,31 +448,12 @@ with btn_c2:
         </body></html>
         """
 
-    # Lấy chuỗi HTML
     dulieu_html = tao_giao_dien_html_full_width(df_f, thang, tong_tien, tien_cty_ck, tien_quynh_nhu)
-    
-    # Biên dịch chuỗi HTML thành dữ liệu dữ liệu dạng PDF bằng pdfkit
-    try:
-        options = {
-            'page-size': 'A4',
-            'orientation': 'Landscape',
-            'margin-top': '8mm',
-            'margin-bottom': '8mm',
-            'margin-left': '12mm',
-            'margin-right': '12mm',
-            'encoding': "UTF-8"
-        }
-        pdf_bytes = pdfkit.from_string(dulieu_html, False, options=options)
-        
-        # Tạo nút download file đuôi .pdf trực tiếp
-        st.download_button(
-            label="📥 Xuất file PDF",
-            data=pdf_bytes,
-            file_name=f"Bao_cao_phi_ship_thang_{thang.replace('/', '_')}.pdf",
-            mime="application/pdf"
-        )
-    except Exception as e:
-        st.error("Cần cấu hình wkhtmltopdf trên máy để xuất PDF trực tiếp. Hãy dùng tạm nút 'In đây nè bé ưi' chọn 'Lưu dạng PDF' nhé!")
+    st.download_button(
+        label="📥 Xuất file PDF",
+        data=dulieu_html,
+        file_name=f"Bao_cao_phi_ship_thang_{thang.replace('/', '_')}.html",
+        mime="text/html"
     )
 
 # ========================================================
