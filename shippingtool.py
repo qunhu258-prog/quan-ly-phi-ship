@@ -193,8 +193,8 @@ st.markdown("""
 # ==========================================
 # 4. KẾT NỐI GOOGLE SHEETS
 # ==========================================
-# ĐÃ SỬA CHÍNH XÁC ID SHEET (BỎ CHỮ G THỪA Ở CUỐI)
-SHEET_ID = "1pX1uImwD770upHdJ4OKNzYxwKxd5C_VeI2zQeW0SBLU"
+# CẬP NHẬT ID GOOGLE SHEET MỚI CHÍNH XÁC
+SHEET_ID = "1II4nY7kXYcrfFBzQ86Gm1TLbefI-Ec4GRIB_-APqZpA"
 
 @st.cache_resource
 def ket_noi_sheet():
