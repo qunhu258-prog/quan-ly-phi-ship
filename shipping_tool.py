@@ -69,7 +69,12 @@ st.markdown("""
     }
     .print-title { display: none; }
 
-    /* CSS CHO KHỐI THÔNG TIN CARD KPI KẾ TOÁN */
+    /* CSS CHO KHỐI THÔNG TIN CARD KPI KẾ TOÁN (THU NHỎ VÀO GIỮA) */
+    .kpi-wrapper {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 10px;
+    }
     .kpi-container {
         display: flex;
         gap: 20px;
@@ -88,25 +93,30 @@ st.markdown("""
     .kpi-header {
         background-color: #5B7E3C;
         color: #ffffff;
-        font-size: 15px;
+        font-size: 14px;
         font-weight: 700;
         padding: 12px 5px;
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
     .kpi-body {
-        padding: 20px 10px;
+        padding: 22px 10px;
+        display: flex;
+        align-items: baseline;
+        justify-content: center;
+        gap: 6px;
     }
     .kpi-value {
         font-size: 32px;
         color: #222222;
         font-weight: 700;
         font-family: 'Segoe UI', Arial, sans-serif;
+        line-height: 1;
     }
-    .kpi-unit {
-        font-size: 13px;
+    .kpi-currency {
+        font-size: 16px;
+        font-weight: bold;
         color: #666666;
-        margin-top: 4px;
     }
 
     /* ==========================================
@@ -331,26 +341,29 @@ if not df_phat_sinh.empty:
 st.markdown(f'<div class="print-title">CHI PHÍ GIAO HÀNG - THÁNG {thang}</div>', unsafe_allow_html=True)
 
 
-# ==========================================
-# 6.2. HIỂN THỊ CÁC CARD TỔNG TIỀN CHO KẾ TOÁN
-# ==========================================
-st.markdown('<h3 class="no-print">📊 Số liệu thanh toán cho Kế toán</h3>', unsafe_allow_html=True)
+# ========================================================
+# 6.2. HIỂN THỊ CÁC CARD KPI KẾ TOÁN (GỌN VÀO GIỮA - XÓA CHỮ DƯỚI)
+# ========================================================
 st.html(
     f"""
-    <div class="kpi-container">
-        <div class="kpi-card">
-            <div class="kpi-header">🏢 SỐ TIỀN CÔNG TY CẦN CHUYỂN KHOẢN</div>
-            <div class="kpi-body">
-                <div class="kpi-value" style="color: #2e7d32;">{tien_cty_ck:,}</div>
-                <div class="kpi-unit">VNĐ (Hãng vận chuyển trừ trực tiếp tài khoản công ty)</div>
+    <div class="kpi-wrapper">
+        <div class="kpi-container">
+            <!-- Card 1 -->
+            <div class="kpi-card">
+                <div class="kpi-header">🏢 SỐ TIỀN CÔNG TY CẦN CHUYỂN KHOẢN</div>
+                <div class="kpi-body">
+                    <div class="kpi-value" style="color: #2e7d32;">{tien_cty_ck:,}</div>
+                    <div class="kpi-currency">VNĐ</div>
+                </div>
             </div>
-        </div>
-        
-        <div class="kpi-card">
-            <div class="kpi-header">👩‍💼 SỐ TIỀN CẦN TRẢ LẠI CHO QUỲNH NHƯ</div>
-            <div class="kpi-body">
-                <div class="kpi-value" style="color: #e65100;">{tien_quynh_nhu:,}</div>
-                <div class="kpi-unit">VNĐ (Quỳnh Như đã ứng tiền mặt chi hộ)</div>
+            
+            <!-- Card 2 -->
+            <div class="kpi-card">
+                <div class="kpi-header">👩‍💼 SỐ TIỀN CẦN TRẢ LẠI CHO QUỲNH NHƯ</div>
+                <div class="kpi-body">
+                    <div class="kpi-value" style="color: #e65100;">{tien_quynh_nhu:,}</div>
+                    <div class="kpi-currency">VNĐ</div>
+                </div>
             </div>
         </div>
     </div>
