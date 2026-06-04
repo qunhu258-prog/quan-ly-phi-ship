@@ -493,4 +493,4 @@ for idx, (i, row) in enumerate(df_f.iterrows(), start=1):
 # ==========================================
 # 8. TỔNG CỘNG
 # ==========================================
-st.markdown(f'<div class="total-box">💰 TỔNG CHI PHÍ THÁNG {thang}: {tong_tien:,.0f} VNĐ {thong_tin_them}</div>', unsafe_allow_html=True)
+st.markdown(f'<div class="total-box">💰 TỔNG CHI PHÍ THÁNG {thang}: {tong_tien:,.0f} VNĐ
