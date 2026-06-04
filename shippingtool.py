@@ -29,7 +29,7 @@ else:
     thoi_tiet = "Trời đêm mát mẻ ✨"
 
 # ==========================================
-# 3. STYLE CSS TỔNG HỢP GIAO DIỆN WEB & CARD KPI & SỬA LỖI IN
+# 3. STYLE CSS TỔNG HỢP GIAO DIỆN & TỐI ƯU HÓA IN PDF
 # ==========================================
 st.markdown("""
 <style>
@@ -67,121 +67,67 @@ st.markdown("""
         background-color: #5B7E3C !important;
         color: white !important;
     }
-    .print-title { display: none; }
+    .print-only-title { display: none; }
 
-    /* CSS CHO KHỐI THÔNG TIN CARD KPI KẾ TOÁN (THU NHỎ VÀO GIỮA) */
-    .kpi-wrapper {
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 0 10px;
-    }
-    .kpi-container {
-        display: flex;
-        gap: 20px;
-        margin-top: 10px;
-        margin-bottom: 25px;
-    }
-    .kpi-card {
-        flex: 1;
-        background-color: #ffffff;
-        border: 2px solid #5B7E3C;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 3px 8px rgba(0,0,0,0.06);
-        text-align: center;
-    }
-    .kpi-header {
-        background-color: #5B7E3C;
-        color: #ffffff;
-        font-size: 14px;
-        font-weight: 700;
-        padding: 12px 5px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    .kpi-body {
-        padding: 22px 10px;
-        display: flex;
-        align-items: baseline;
-        justify-content: center;
-        gap: 6px;
-    }
-    .kpi-value {
-        font-size: 32px;
-        color: #222222;
-        font-weight: 700;
-        font-family: 'Segoe UI', Arial, sans-serif;
-        line-height: 1;
-    }
-    .kpi-currency {
-        font-size: 16px;
-        font-weight: bold;
-        color: #666666;
-    }
+    /* CSS KHỐI THÔNG TIN CARD KPI KẾ TOÁN */
+    .kpi-wrapper { max-width: 900px; margin: 0 auto; padding: 0 10px; }
+    .kpi-container { display: flex; gap: 20px; margin-top: 10px; margin-bottom: 25px; }
+    .kpi-card { flex: 1; background-color: #ffffff; border: 2px solid #5B7E3C; border-radius: 8px; overflow: hidden; box-shadow: 0 3px 8px rgba(0,0,0,0.06); text-align: center; }
+    .kpi-header { background-color: #5B7E3C; color: #ffffff; font-size: 14px; font-weight: 700; padding: 12px 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .kpi-body { padding: 22px 10px; display: flex; align-items: baseline; justify-content: center; gap: 6px; }
+    .kpi-value { font-size: 32px; color: #222222; font-weight: 700; font-family: 'Segoe UI', Arial, sans-serif; line-height: 1; }
+    .kpi-currency { font-size: 16px; font-weight: bold; color: #666666; }
 
-    /* ==========================================
-       XỬ LÝ TRIỆT ĐỂ LỖI LÙI TRANG KHI IN 🖨️
-       ========================================== */
+    /* ========================================================
+       🚨 XỬ LÝ TRIỆT ĐỂ ẨN NÚT BẤM VÀ CĂN CHỈNH KHI XUẤT PDF
+       ======================================================== */
     @media print {
-        @page { size: landscape; margin: 8mm 12mm !important; }
+        @page { size: landscape; margin: 6mm 10mm !important; }
         
-        /* Triệt tiêu hoàn toàn thanh Header mặc định của Streamlit */
-        header, [data-testid="stHeader"], .stAppHeader {
-            display: none !important;
-            height: 0 !important;
-            opacity: 0 !important;
+        /* Ẩn thanh công cụ mặc định của Streamlit */
+        header, [data-testid="stHeader"], .stAppHeader, footer, [data-testid="stToolbar"] {
+            display: none !important; height: 0 !important; opacity: 0 !important;
         }
 
-        /* Ẩn hoàn toàn tất cả các thành phần giao diện không cần in */
+        /* Ẩn các thành phần nhập liệu không cần thiết trên PDF */
         section[data-testid="stSidebar"], 
         div[data-testid="stForm"], 
         div.stSelectbox,
-        footer, 
-        h1, 
-        iframe, 
-        div.stButton,
+        .no-print,
         div[data-testid="stElementContainer"]:has(button),
-        div:has(> .stForm),
-        .no-print { 
-            display: none !important; 
-            height: 0 !important; 
-            margin: 0 !important; 
-            padding: 0 !important; 
+        .stDownloadButton,
+        iframe { 
+            display: none !important; height: 0 !important; margin: 0 !important; padding: 0 !important; 
         }
         
-        /* Ép khung chứa chính lên sát mép trên cùng của giấy, xóa toàn bộ padding khoảng trống */
+        /* Đẩy nội dung chính sát lề trên giấy */
         .stApp, .main, .main .block-container, [data-testid="stMainBlockContainer"] {
-            padding-top: 0px !important; 
-            margin-top: 0px !important;
-            padding-left: 0px !important; 
-            padding-right: 0px !important;
-            margin: 0px !important; 
-            top: 0px !important;
+            padding-top: 0px !important; margin-top: 0px !important;
+            padding-left: 0px !important; padding-right: 0px !important;
+            margin: 0px !important; top: 0px !important;
         }
 
-        /* Tiêu đề in chuyên dụng được đưa lên trên cùng bản in */
-        .print-title {
-            display: block !important; 
-            color: #5B7E3C !important; 
-            text-align: center !important;
-            margin-top: 0px !important; 
-            margin-bottom: 25px !important; 
-            font-size: 26px !important; 
-            font-weight: bold !important;
+        /* Hiển thị tiêu đề in chuyên dụng */
+        .print-only-title {
+            display: block !important; color: #5B7E3C !important; text-align: center !important;
+            margin-top: 0px !important; margin-bottom: 20px !important; 
+            font-size: 26px !important; font-weight: bold !important;
         }
 
-        /* Định dạng lại bảng và dòng dữ liệu cân đối */
-        div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; width: 100% !important; gap: 0px !important; }
-        div[data-testid="stHorizontalBlock"] > div:nth-child(8) { display: none !important; }
-        div[data-testid="stHorizontalBlock"] > div:nth-child(1) { width: 5% !important; max-width: 5% !important; flex: 0 0 5% !important; }
-        div[data-testid="stHorizontalBlock"] > div:nth-child(2) { width: 11% !important; max-width: 11% !important; flex: 0 0 11% !important; }
-        div[data-testid="stHorizontalBlock"] > div:nth-child(3) { width: 34% !important; max-width: 34% !important; flex: 0 0 34% !important; }
-        div[data-testid="stHorizontalBlock"] > div:nth-child(4) { width: 12% !important; max-width: 12% !important; flex: 0 0 12% !important; }
-        div[data-testid="stHorizontalBlock"] > div:nth-child(5) { width: 13% !important; max-width: 13% !important; flex: 0 0 13% !important; }
-        div[data-testid="stHorizontalBlock"] > div:nth-child(6) { width: 13% !important; max-width: 13% !important; flex: 0 0 13% !important; }
-        div[data-testid="stHorizontalBlock"] > div:nth-child(7) { width: 12% !important; max-width: 12% !important; flex: 0 0 12% !important; border-right: none !important; }
+        /* Ẩn cột hành động XÓA cuối cùng của bảng khi in */
+        div[data-testid="stHorizontalBlock"] > div:nth-last-child(1) { display: none !important; }
+
+        /* Tự động chia lại tỷ lệ các cột dữ liệu còn lại cho vừa trang Landscape */
+        div[data-testid="stHorizontalBlock"] > div:nth-child(1) { width: 6% !important; max-width: 6% !important; flex: 0 0 6% !important; }
+        div[data-testid="stHorizontalBlock"] > div:nth-child(2) { width: 12% !important; max-width: 12% !important; flex: 0 0 12% !important; }
+        div[data-testid="stHorizontalBlock"] > div:nth-child(3) { width: 38% !important; max-width: 38% !important; flex: 0 0 38% !important; }
+        div[data-testid="stHorizontalBlock"] > div:nth-child(4) { width: 11% !important; max-width: 11% !important; flex: 0 0 11% !important; }
+        div[data-testid="stHorizontalBlock"] > div:nth-child(5) { width: 11% !important; max-width: 11% !important; flex: 0 0 11% !important; }
+        div[data-testid="stHorizontalBlock"] > div:nth-child(6) { width: 11% !important; max-width: 11% !important; flex: 0 0 11% !important; }
+        div[data-testid="stHorizontalBlock"] > div:nth-child(7) { width: 11% !important; max-width: 11% !important; flex: 0 0 11% !important; border-right: none !important; }
+        
         div[data-testid="stHorizontalBlock"]:has(.header-col) > div:nth-child(7) .header-col { border-radius: 0 8px 0 0 !important; }
-        .row-style, .header-col { font-size: 13px !important; padding: 6px 2px !important; }
+        .row-style, .header-col { font-size: 14px !important; padding: 6px 2px !important; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -189,7 +135,7 @@ st.markdown("""
 # ==========================================
 # 4. KẾT NỐI GOOGLE SHEETS
 # ==========================================
-SHEET_ID = "1II4nY7kXYcrfFBzQ86Gm1TLbefI-Ec4GRIB_-APqZpA"
+SHEET_ID = "1pX1uImwD770upHdJ4OKNzYxwKxd5C_VeI2zQeW0SBLUg"
 
 @st.cache_resource
 def ket_noi_sheet():
@@ -322,7 +268,7 @@ df_f = df[df["Ngày_DT"].dt.strftime("%m/%Y") == thang]
 df_f = df_f.sort_values(by="Ngày_DT", ascending=True)
 
 # --- SỐ TIỀN THEO ĐỐI TƯỢNG CHO CARD KPI ---
-tien_cty_ck = int(df_f[df_f["Người thanh toán"] == "Công ty CK"]["Phí (VNĐ)"].sum())
+tien_cty_ck = int(df_f[df_f["Keep Người thanh toán"] == "Công ty CK"]["Phí (VNĐ)"].sum() if "Keep Người thanh toán" in df_f.columns else df_f[df_f["Người thanh toán"] == "Công ty CK"]["Phí (VNĐ)"].sum())
 tien_quynh_nhu = int(df_f[df_f["Người thanh toán"] == "Quỳnh Như"]["Phí (VNĐ)"].sum())
 tong_tien = int(df_f["Phí (VNĐ)"].sum())
 
@@ -334,21 +280,16 @@ if not df_phat_sinh.empty:
         if name.strip():
             thong_tin_them += f" • Khác ({name}): {int(money):,} VNĐ"
 
+# Tiêu đề in chuyên dụng (Chỉ xuất hiện trên bản in PDF)
+st.markdown(f'<div class="print-only-title">CHI PHÍ GIAO HÀNG - THÁNG {thang}</div>', unsafe_allow_html=True)
 
 # ========================================================
-# 6.1. TIÊU ĐỀ IN TRÊN CÙNG (Chỉ hiển thị khi bấm In)
-# ========================================================
-st.markdown(f'<div class="print-title">CHI PHÍ GIAO HÀNG - THÁNG {thang}</div>', unsafe_allow_html=True)
-
-
-# ========================================================
-# 6.2. HIỂN THỊ CÁC CARD KPI KẾ TOÁN (GỌN VÀO GIỮA - XÓA CHỮ DƯỚI)
+# 6.2. HIỂN THỊ CÁC CARD KPI KẾ TOÁN
 # ========================================================
 st.html(
     f"""
     <div class="kpi-wrapper">
         <div class="kpi-container">
-            <!-- Card 1 -->
             <div class="kpi-card">
                 <div class="kpi-header">🏢 SỐ TIỀN CÔNG TY CẦN CHUYỂN KHOẢN</div>
                 <div class="kpi-body">
@@ -357,7 +298,6 @@ st.html(
                 </div>
             </div>
             
-            <!-- Card 2 -->
             <div class="kpi-card">
                 <div class="kpi-header">👩‍💼 SỐ TIỀN CẦN TRẢ LẠI CHO QUỲNH NHƯ</div>
                 <div class="kpi-body">
@@ -370,70 +310,13 @@ st.html(
     """
 )
 
-# Nút chức năng In ấn / Xuất PDF
+# Nút chức năng In ấn / Xuất file PDF hệ thống
 st.write(" ")
 btn_c1, btn_c2 = st.columns([4, 8])
 
 with btn_c1:
     if st.button("🖨️ XUẤT FILE PDF / IN BÁO CÁO", use_container_width=True):
         components.html("<script>window.parent.print();</script>", height=0)
-
-with btn_c2:
-    from io import BytesIO
-    from xhtml2pdf import pisa
-
-    def tao_file_pdf_that(dataframe, month_txt, total_amount, cty, qnhu):
-        rows_html = ""
-        for idx, (_, r) in enumerate(dataframe.iterrows(), start=1):
-            rows_html += f"""
-            <tr>
-                <td style='text-align: center; width: 5%;'>{idx}</td>
-                <td style='text-align: center; width: 11%;'>{r['Ngày']}</td>
-                <td style='text-align: left; padding-left: 5px; width: 34%;'>{r['Nội dung']}</td>
-                <td style='text-align: center; width: 12%;'>{r['Đơn vị']}</td>
-                <td style='text-align: center; width: 13%;'>{r['Phân loại']}</td>
-                <td style='text-align: center; width: 13%;'>{r['Người thanh toán']}</td>
-                <td style='text-align: right; padding-right: 5px; font-weight: bold; width: 12%;'>{r['Phí (VNĐ)']:,}</td>
-            </tr>
-            """
-        
-        html_content = f"""
-        <!DOCTYPE html><html><head><meta charset="utf-8">
-        <style>
-            @page {{ size: letter landscape; margin: 1cm; }}
-            body {{ font-family: Helvetica, Arial, sans-serif; color: #333; }}
-            .print-title {{ color: #5B7E3C; font-size: 22px; font-weight: bold; text-align: center; text-transform: uppercase; margin-bottom: 15px; }}
-            .summary-text {{ font-size: 13px; margin-bottom: 15px; font-weight: bold; color: #444; }}
-            table {{ width: 100%; border-collapse: collapse; }}
-            th {{ background-color: #5B7E3C; color: white; font-weight: bold; font-size: 12px; padding: 8px 4px; border: 1px solid #5B7E3C; }}
-            td {{ padding: 8px 4px; font-size: 11px; border: 1px solid #eef2ec; }}
-            .total-box {{ padding: 12px; font-size: 15px; font-weight: bold; text-align: center; background-color: #5B7E3C; color: white; margin-top: 15px; }}
-        </style></head><body>
-            <div class="print-title">CHI PHÍ GIAO HÀNG - THÁNG {month_txt}</div>
-            <div class="summary-text">📍 Thống kê nguồn chi: Công ty CK: {cty:,} đ | Quỳnh Như hoàn trả: {qnhu:,} đ</div>
-            <table>
-                <thead><tr>
-                    <th>STT</th><th>Ngày</th><th>Nội dung</th><th>ĐVVC</th><th>Phân loại</th><th>Người TT</th><th>Phí (VNĐ)</th>
-                </tr></thead>
-                <tbody>{rows_html}</tbody>
-            </table>
-            <div class="total-box">💰 TỔNG CỘNG CHI PHÍ: {total_amount:,.0f} VNĐ</div>
-        </body></html>
-        """
-        
-        result = BytesIO()
-        pisa.CreatePDF(BytesIO(html_content.encode("utf-8")), dest=result)
-        return result.getvalue()
-
-    # Tạo dữ liệu PDF dạng Byte
-    pdf_data = tao_file_pdf_that(df_f, thang, tong_tien, tien_cty_ck, tien_quynh_nhu)
-    
-    st.download_button(
-        label="📥 Xuất file PDF thật",
-        data=pdf_data,
-        file_name=f"Bao_cao_phi_ship_thang_{thang.replace('/', '_')}.pdf",
-        mime="application/pdf"
-    )
 
 # ========================================================
 # 7. HIỂN THỊ BẢNG DỮ LIỆU ĐA CỘT MỚI
