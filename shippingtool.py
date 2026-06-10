@@ -29,7 +29,7 @@ else:
     thoi_tiet = "Trời đêm mát mẻ ✨"
 
 # ==========================================
-# 3. STYLE CSS TỔNG HỢP GIAO DIỆN WEB & CARD KPI & SỬA LỖI IN
+# 3. STYLE CSS TỔNG HỢP GIAO DIỆN WEB & SỬA LỖI IN
 # ==========================================
 st.markdown("""
 <style>
@@ -68,56 +68,6 @@ st.markdown("""
         color: white !important;
     }
     .print-title { display: none; }
-
-    /* CSS CHO KHỐI THÔNG TIN CARD KPI KẾ TOÁN (THU NHỎ VÀO GIỮA) */
-    .kpi-wrapper {
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 0 10px;
-    }
-    .kpi-container {
-        display: flex;
-        gap: 20px;
-        margin-top: 10px;
-        margin-bottom: 25px;
-    }
-    .kpi-card {
-        flex: 1;
-        background-color: #ffffff;
-        border: 2px solid #5B7E3C;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 3px 8px rgba(0,0,0,0.06);
-        text-align: center;
-    }
-    .kpi-header {
-        background-color: #5B7E3C;
-        color: #ffffff;
-        font-size: 14px;
-        font-weight: 700;
-        padding: 12px 5px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    .kpi-body {
-        padding: 22px 10px;
-        display: flex;
-        align-items: baseline;
-        justify-content: center;
-        gap: 6px;
-    }
-    .kpi-value {
-        font-size: 32px;
-        color: #222222;
-        font-weight: 700;
-        font-family: 'Segoe UI', Arial, sans-serif;
-        line-height: 1;
-    }
-    .kpi-currency {
-        font-size: 16px;
-        font-weight: bold;
-        color: #666666;
-    }
 
     /* ==========================================
         XỬ LÝ TRIỆT ĐỂ LỖI LÙI TRANG KHI IN 🖨️
@@ -193,7 +143,6 @@ st.markdown("""
 # ==========================================
 # 4. KẾT NỐI GOOGLE SHEETS
 # ==========================================
-# CẬP NHẬT ID GOOGLE SHEET MỚI CHÍNH XÁC
 SHEET_ID = "1II4nY7kXYcrfFBzQ86Gm1TLbefI-Ec4GRIB_-APqZpA"
 
 @st.cache_resource
@@ -326,9 +275,7 @@ thang = st.selectbox("📅 Chọn tháng xem dữ liệu", months)
 df_f = df[df["Ngày_DT"].dt.strftime("%m/%Y") == thang]
 df_f = df_f.sort_values(by="Ngày_DT", ascending=True)
 
-# --- SỐ TIỀN THEO ĐỐI TƯỢNG CHO CARD KPI ---
-tien_cty_ck = int(df_f[df_f["Người thanh toán"] == "Công ty CK sau"]["Phí (VNĐ)"].sum())
-tien_quynh_nhu = int(df_f[df_f["Người thanh toán"] == "Quỳnh Như"]["Phí (VNĐ)"].sum())
+# --- TÍNH TỔNG TIỀN ---
 tong_tien = int(df_f["Phí (VNĐ)"].sum())
 
 
@@ -339,33 +286,8 @@ st.markdown(f'<div class="print-title">CHI PHÍ GIAO HÀNG - THÁNG {thang}</div
 
 
 # ========================================================
-# 6.2. HIỂN THỊ CÁC CARD KPI KẾ TOÁN (GỌN VÀO GIỮA - XÓA CHỮ DƯỚI)
+# 6.2. NÚT IN & XUẤT FILE 
 # ========================================================
-st.html(
-    f"""
-    <div class="kpi-wrapper">
-        <div class="kpi-container">
-            <div class="kpi-card">
-                <div class="kpi-header">🏢 CÔNG TY THANH TOÁN (Theo hóa đơn VTP)</div>
-                <div class="kpi-body">
-                    <div class="kpi-value" style="color: #2e7d32;">{tien_cty_ck:,}</div>
-                    <div class="kpi-currency">VNĐ</div>
-                </div>
-            </div>
-            
-            <div class="kpi-card">
-                <div class="kpi-header">👩‍💼 QUỲNH NHƯ ĐÃ CHI</div>
-                <div class="kpi-body">
-                    <div class="kpi-value" style="color: #e65100;">{tien_quynh_nhu:,}</div>
-                    <div class="kpi-currency">VNĐ</div>
-                </div>
-            </div>
-        </div>
-    </div>
-    """
-)
-
-# Nút In & Xuất file
 st.write(" ")
 btn_c1, btn_c2, btn_c3 = st.columns([1.5, 2, 8])
 
@@ -374,7 +296,7 @@ with btn_c1:
         components.html("<script>window.parent.print();</script>", height=0)
 
 with btn_c2:
-    def tao_giao_dien_html_full_width(dataframe, month_txt, total_amount, cty, qnhu):
+    def tao_giao_dien_html_full_width(dataframe, month_txt, total_amount):
         rows_html = ""
         for idx, (_, r) in enumerate(dataframe.iterrows(), start=1):
             rows_html += f"""
@@ -397,15 +319,6 @@ with btn_c2:
             .title-container {{ text-align: center; padding-top: 10px; margin-bottom: 20px; }}
             .print-title {{ color: #5B7E3C; font-size: 22pt; font-weight: bold; text-transform: uppercase; margin: 0; }}
             
-            /* CSS ĐƯA 2 CARD KPI VÀO GIỮA FILE HTML TẢI VỀ */
-            .kpi-wrapper {{ max-width: 850px; margin: 0 auto 25px auto; padding: 0 10px; }}
-            .kpi-container {{ display: flex; gap: 20px; }}
-            .kpi-card {{ flex: 1; background-color: #ffffff; border: 2px solid #5B7E3C; border-radius: 8px; overflow: hidden; text-align: center; }}
-            .kpi-header {{ background-color: #5B7E3C; color: #ffffff; font-size: 11pt; font-weight: bold; padding: 10px 5px; text-transform: uppercase; }}
-            .kpi-body {{ padding: 18px 10px; display: flex; align-items: baseline; justify-content: center; gap: 6px; }}
-            .kpi-value {{ font-size: 24pt; color: #222222; font-weight: bold; line-height: 1; }}
-            .kpi-currency {{ font-size: 12pt; font-weight: bold; color: #666666; }}
-
             table {{ width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 20px; }}
             th {{ background-color: #5B7E3C; color: white; font-weight: bold; font-size: 11pt; padding: 10px 4px; border: 1px solid #5B7E3C; text-align: center; }}
             td {{ padding: 10px 4px; font-size: 10pt; border-bottom: 1px solid #eef2ec; vertical-align: middle; }}
@@ -414,25 +327,6 @@ with btn_c2:
         </style></head><body>
             <div class="title-container"><h1 class="print-title">CHI PHÍ GIAO HÀNG - THÁNG {month_txt}</h1></div>
             
-            <div class="kpi-wrapper">
-                <div class="kpi-container">
-                    <div class="kpi-card">
-                        <div class="kpi-header">🏢 CÔNG TY THANH TOÁN (Theo hóa đơn VTP)</div>
-                        <div class="kpi-body">
-                            <div class="kpi-value" style="color: #2e7d32;">{cty:,}</div>
-                            <div class="kpi-currency">VNĐ</div>
-                        </div>
-                    </div>
-                    <div class="kpi-card">
-                        <div class="kpi-header">👩‍💼 QUỲNH NHƯ ĐÃ CHI</div>
-                        <div class="kpi-body">
-                            <div class="kpi-value" style="color: #e65100;">{qnhu:,}</div>
-                            <div class="kpi-currency">VNĐ</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <table style="padding: 0 10px;">
                 <thead><tr>
                     <th style="width: 5%;">STT</th><th style="width: 11%;">Ngày</th><th style="width: 34%;">Nội dung</th>
@@ -444,7 +338,7 @@ with btn_c2:
         </body></html>
         """
 
-    dulieu_html = tao_giao_dien_html_full_width(df_f, thang, tong_tien, tien_cty_ck, tien_quynh_nhu)
+    dulieu_html = tao_giao_dien_html_full_width(df_f, thang, tong_tien)
     st.download_button(
         label="📥 Xuất file HTML/PDF",
         data=dulieu_html,
@@ -453,7 +347,7 @@ with btn_c2:
     )
 
 # ========================================================
-# 7. HIỂN THỊ BẢNG DỮ LIỆU ĐA CỘT MỚI
+# 7. HIỂN THỊ BẢNG DỮ LIỆU ĐA CỘT
 # ========================================================
 h1, h2, h3, h4, h5, h6, h7, h8 = st.columns([0.8, 1.8, 4.5, 1.8, 2.0, 2.0, 2.0, 1.2])
 h1.markdown('<div class="header-col header-left">STT</div>', unsafe_allow_html=True)
