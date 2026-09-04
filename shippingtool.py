@@ -67,11 +67,6 @@ st.markdown("""
         color: #5B7E3C;
     }
 
-    .shipping-card-count {
-        font-size: 12px;
-        color: #888;
-        margin-top: 5px;
-    }
     .block-container { padding: 2rem 3rem; max-width: 100%; }
     h1 { color: #5B7E3C !important; }
     .taskbar-box {
@@ -355,9 +350,6 @@ if len(tong_theo_dvvc) > 0:
                     </div>
                     <div class="shipping-card-amount">
                         {tong_phi:,.0f} VNĐ
-                    </div>
-                    <div class="shipping-card-count">
-                        {so_luot} lượt phát sinh
                     </div>
                 </div>
                 """,
