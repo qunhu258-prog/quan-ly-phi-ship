@@ -55,14 +55,14 @@ st.markdown("""
     }
 
     .shipping-card-name {
-        font-size: 15px;
+        font-size: 25px;
         font-weight: bold;
         color: #555;
         margin-bottom: 8px;
     }
 
     .shipping-card-amount {
-        font-size: 22px;
+        font-size: 30px;
         font-weight: bold;
         color: #5B7E3C;
     }
