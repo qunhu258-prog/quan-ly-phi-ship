@@ -33,6 +33,45 @@ else:
 # ==========================================
 st.markdown("""
 <style>
+.shipping-summary-title {
+        font-size: 20px;
+        font-weight: bold;
+        color: #5B7E3C;
+        margin-top: 20px;
+        margin-bottom: 12px;
+    }
+
+    .shipping-card {
+        background: #f1f4ef;
+        border-radius: 14px;
+        padding: 18px 15px;
+        text-align: center;
+        border: 1px solid #dfe7d9;
+        box-shadow: 0 3px 10px rgba(91, 126, 60, 0.10);
+        min-height: 105px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .shipping-card-name {
+        font-size: 15px;
+        font-weight: bold;
+        color: #555;
+        margin-bottom: 8px;
+    }
+
+    .shipping-card-amount {
+        font-size: 22px;
+        font-weight: bold;
+        color: #5B7E3C;
+    }
+
+    .shipping-card-count {
+        font-size: 12px;
+        color: #888;
+        margin-top: 5px;
+    }
     .block-container { padding: 2rem 3rem; max-width: 100%; }
     h1 { color: #5B7E3C !important; }
     .taskbar-box {
@@ -277,16 +316,64 @@ df_f = df_f.sort_values(by="Ngày_DT", ascending=True)
 
 # --- TÍNH TỔNG TIỀN ---
 tong_tien = int(df_f["Phí (VNĐ)"].sum())
+# ========================================================
+# 6.1. TỔNG HỢP CHI PHÍ THEO ĐVVC
+# ========================================================
 
+st.markdown(
+    '<div class="shipping-summary-title">📦 TỔNG HỢP PHÍ THEO ĐVVC</div>',
+    unsafe_allow_html=True
+)
+
+# Tính tổng phí theo từng ĐVVC
+tong_theo_dvvc = (
+    df_f.groupby("Đơn vị")["Phí (VNĐ)"]
+    .sum()
+    .sort_values(ascending=False)
+)
+
+# Chỉ lấy các ĐVVC thực sự có phát sinh chi phí trong tháng
+tong_theo_dvvc = tong_theo_dvvc[tong_theo_dvvc > 0]
+
+if len(tong_theo_dvvc) > 0:
+
+    # Tạo số cột tự động theo số lượng ĐVVC
+    so_dvvc = len(tong_theo_dvvc)
+    cols = st.columns(so_dvvc)
+
+    for col, (dvvc, tong_phi) in zip(cols, tong_theo_dvvc.items()):
+
+        # Số lượt giao hàng/phát sinh của ĐVVC
+        so_luot = len(df_f[df_f["Đơn vị"] == dvvc])
+
+        with col:
+            st.markdown(
+                f"""
+                <div class="shipping-card">
+                    <div class="shipping-card-name">
+                        🚚 {dvvc}
+                    </div>
+                    <div class="shipping-card-amount">
+                        {tong_phi:,.0f} VNĐ
+                    </div>
+                    <div class="shipping-card-count">
+                        {so_luot} lượt phát sinh
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+else:
+    st.info("Chưa có chi phí phát sinh theo ĐVVC trong tháng này.")
 
 # ========================================================
-# 6.1. TIÊU ĐỀ IN TRÊN CÙNG (Chỉ hiển thị khi bấm In)
+# 6.2. TIÊU ĐỀ IN TRÊN CÙNG (Chỉ hiển thị khi bấm In)
 # ========================================================
 st.markdown(f'<div class="print-title">CHI PHÍ GIAO HÀNG - THÁNG {thang}</div>', unsafe_allow_html=True)
 
 
 # ========================================================
-# 6.2. NÚT IN & XUẤT FILE 
+# 6.3. NÚT IN & XUẤT FILE 
 # ========================================================
 st.write(" ")
 btn_c1, btn_c2, btn_c3 = st.columns([1.5, 2, 8])
